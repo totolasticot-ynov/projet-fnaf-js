@@ -1,0 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Sirin+Stencil&display=swap');
+
+#Quitter {
+
+    bottom: 100px;
+    left: 250px;
+    position: absolute;
+    font-family: 'Sirin Stencil', cursive;
+    font-size: 37px;
+    color: white;
+    background-color: transparent;
+    border: none;
+
+}

@@ -31,13 +31,12 @@ export class VideoPlayer {
         try {
             await this.videoElement.play();
             this.isPlaying = true;
-            console.log('✅ Lecture vidéo démarrée avec le son');
+            console.log('Lecture vidéo démarrée avec le son');
         } catch (error) {
-            console.warn('⚠️ Autoplay bloqué:', error.message);
-            console.log('👆 Cliquez sur l\'écran pour lancer la vidéo');
+            console.warn('Autoplay bloqué:', error.message);
+            console.log('Cliquez sur l\'écran pour lancer la vidéo');
             this.isPlaying = false;
             
-            // Ajouter un listener pour démarrer au clic
             document.addEventListener('click', async () => {
                 await this.videoElement.play();
             }, { once: true });

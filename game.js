@@ -15,14 +15,13 @@ class Game {
             return;
         }
 
-        // Lancer la vidéo d'intro
         await this.playIntroVideo();
         
         console.log('Jeu lancé');
     }
 
     async playIntroVideo() {
-        this.videoPlayer = new VideoPlayer('Opening/FIVE NIGHT AT YNOV (3).mp4');
+        this.videoPlayer = new VideoPlayer('Opening/FIVE_NIGHT_AT_YNOV.mp4');
         
         const videoElement = this.videoPlayer.createVideoElement();
         
