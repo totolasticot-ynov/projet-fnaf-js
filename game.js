@@ -15,33 +15,19 @@ class Game {
             return;
         }
 
-        // Lancer la vidéo d'intro
         await this.playIntroVideo();
         
         console.log('Jeu lancé');
     }
 
     async playIntroVideo() {
-        this.videoPlayer = new VideoPlayer('Opening/FIVE NIGHT AT YNOV (3).mp4');
+        this.videoPlayer = new VideoPlayer('Opening/FIVE NIGHT AT YNOV .mp4');
         
         const videoElement = this.videoPlayer.createVideoElement();
         
         this.container.appendChild(videoElement);
 
-        this.videoPlayer.on('ended', () => {
-            console.log('Vidéo terminée');
-            this.onVideoEnded();
-        });
-
-        this.videoPlayer.on('error', (e) => {
-            console.error('Erreur de lecture:', e);
-        });
-
         await this.videoPlayer.play();
-    }
-
-    onVideoEnded() {
-        console.log(' Fin de la vidéo - prêt pour le jeu');
     }
 }
 
