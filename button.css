@@ -33,7 +33,7 @@
     font-size: clamp(35px, calc(75px * var(--ui-scale, 1)), 35px);
     font-family: "Sirin Stencil", cursive;
 }
-#Quitter {
+#quit-btn {
 
     position: absolute;
     left: 7%;

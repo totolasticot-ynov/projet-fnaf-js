@@ -24,6 +24,7 @@ class Game {
         }
 
         await this.playIntroVideo();
+        this.setupMenuButtons();
 
         window.addEventListener('resize', () => this.updateStageLayout());
         this.updateStageLayout();
@@ -69,6 +70,25 @@ class Game {
 
         const uiScale = stageWidth / 1920;
         this.stage.style.setProperty('--ui-scale', String(uiScale));
+    }
+
+    setupMenuButtons() {
+        const quitButton = document.getElementById('quit-btn');
+        if (!quitButton) {
+            return;
+        }
+
+        quitButton.addEventListener('click', () => {
+            if (window.opener || window.history.length <= 1) {
+                window.close();
+            }
+
+            setTimeout(() => {
+                if (!window.closed) {
+                    window.location.replace('about:blank');
+                }
+            }, 50);
+        });
     }
 }
 
