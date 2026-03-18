@@ -1,14 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Sirin+Stencil&display=swap');
 
+#Options,
 #Quitter {
-
-    bottom: 100px;
-    left: 250px;
-    position: absolute;
-    font-family: 'Sirin Stencil', cursive;
-    font-size: 37px;
-    color: white;
-    background-color: transparent;
+    position: fixed;
+    left: clamp(20px, 13vw, 250px);
+    background: transparent;
     border: none;
+    color: white;
+    font-family: "Sirin Stencil", cursive;
+    font-size: clamp(24px, 2.2vw, 37px);
+}
 
+#Options {
+    bottom: clamp(120px, 16vh, 175px);
+}
+
+#Quitter {
+    bottom: clamp(60px, 9vh, 100px);
 }
