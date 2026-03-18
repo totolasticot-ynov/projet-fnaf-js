@@ -34,6 +34,7 @@
             height: 100%;
             object-fit: contain;
             z-index: 1;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -45,10 +46,23 @@
             <button id="Jouer">Jouer</button>
             <button id="Options">Options</button>
             <button id="Credits">Crédits</button>
+            <div id="credits-modal" class="modal hidden">
+                <div class="modal-content">
+                    <button id="close-credits" class="close-btn">&times;</button>
+
+                    <h2>Crédits</h2>
+                    
+                    <div class="credits-content credits-text">
+                    <p>Fait par Thomas, Preston, Augustin et Romain avec comme inspiration Five Nights at Freddy's.</p>
+                    </div>
+                </div>
+            </div>
+
             <button id="Quitter">Quitter</button>
         </div>
     </div>
     
     <script type="module" src="game.js"></script>
+    <script type="module" src="menu.js"></script>
 </body>
 </html>
