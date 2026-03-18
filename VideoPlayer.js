@@ -14,8 +14,8 @@ export class VideoPlayer {
         this.videoElement.playsInline = true;
         
         Object.assign(this.videoElement.style, {
-            width: '100vw',
-            height: '100vh',
+            width: '100%',
+            height: '100%',
             objectFit: 'contain',
             display: 'block'
         });
@@ -24,10 +24,6 @@ export class VideoPlayer {
     }
 
     async play() {
-        if (!this.videoElement) {
-            throw new Error('Élément vidéo non créé. Appelez createVideoElement() d\'abord.');
-        }
-
         try {
             await this.videoElement.play();
             this.isPlaying = true;
@@ -37,7 +33,6 @@ export class VideoPlayer {
             console.log(' Cliquez sur l\'écran pour lancer la vidéo');
             this.isPlaying = false;
             
-            // Ajouter un listener pour démarrer au clic
             document.addEventListener('click', async () => {
                 await this.videoElement.play();
             }, { once: true });

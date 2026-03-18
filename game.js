@@ -4,6 +4,8 @@ class Game {
     constructor() {
         this.videoPlayer = null;
         this.container = null;
+        this.stage = null;
+        this.videoRatio = 16 / 9;
     }
 
     async init() {
@@ -15,7 +17,16 @@ class Game {
             return;
         }
 
+        this.stage = document.getElementById('menu-stage');
+        if (!this.stage) {
+            console.error(' Zone de menu introuvable');
+            return;
+        }
+
         await this.playIntroVideo();
+
+        window.addEventListener('resize', () => this.updateStageLayout());
+        this.updateStageLayout();
         
         console.log('Jeu lancé');
     }
@@ -24,10 +35,40 @@ class Game {
         this.videoPlayer = new VideoPlayer('Opening/FIVE NIGHT AT YNOV .mp4');
         
         const videoElement = this.videoPlayer.createVideoElement();
-        
-        this.container.appendChild(videoElement);
+
+        videoElement.addEventListener('loadedmetadata', () => {
+            if (videoElement.videoWidth && videoElement.videoHeight) {
+                this.videoRatio = videoElement.videoWidth / videoElement.videoHeight;
+                this.updateStageLayout();
+            }
+        });
+
+        this.stage.prepend(videoElement);
 
         await this.videoPlayer.play();
+    }
+
+    updateStageLayout() {
+        if (!this.container || !this.stage) {
+            return;
+        }
+
+        const containerWidth = this.container.clientWidth;
+        const containerHeight = this.container.clientHeight;
+
+        let stageWidth = containerWidth;
+        let stageHeight = stageWidth / this.videoRatio;
+
+        if (stageHeight > containerHeight) {
+            stageHeight = containerHeight;
+            stageWidth = stageHeight * this.videoRatio;
+        }
+
+        this.stage.style.width = `${stageWidth}px`;
+        this.stage.style.height = `${stageHeight}px`;
+
+        const uiScale = stageWidth / 1920;
+        this.stage.style.setProperty('--ui-scale', String(uiScale));
     }
 }
 
