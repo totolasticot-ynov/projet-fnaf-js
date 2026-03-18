@@ -3,13 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three Nights at YNOV</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
 
         body {
             background-color: #000;
@@ -18,20 +12,42 @@
         }
         
         #game-container {
+            position: absolute;
             width: 100vw;
             height: 100vh;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
         }
+
+        #menu-stage {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #menu-stage video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            z-index: 1;
+        }
     </style>
 </head>
 <body>
-    <button id="Options"> Options </button>
-    <button id="Quitter"> Quitter </button>
     <link rel="stylesheet" href="button.css">
-
-    <div id="game-container"> </div>
+    <link rel="stylesheet" href="game.css">
+    <div id="game-container">
+        <div id="menu-stage">
+            <button id="Jouer">Jouer</button>
+            <button id="Options">Options</button>
+            <button id="Credits">Crédits</button>
+            <button id="Quitter">Quitter</button>
+        </div>
+    </div>
     
     <script type="module" src="game.js"></script>
 </body>

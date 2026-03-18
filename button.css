@@ -1,20 +1,48 @@
 @import url('https://fonts.googleapis.com/css2?family=Sirin+Stencil&display=swap');
 
-#Options,
-#Quitter {
-    position: fixed;
-    left: clamp(20px, 13vw, 250px);
+#Jouer {
+    position: absolute;
+    left: 7%;
+    bottom: 39%;
+    z-index: 10;
     background: transparent;
     border: none;
     color: white;
+    font-size: clamp(35px, calc(75px * var(--ui-scale, 1)), 35px);
     font-family: "Sirin Stencil", cursive;
-    font-size: clamp(24px, 2.2vw, 37px);
 }
-
 #Options {
-    bottom: clamp(120px, 16vh, 175px);
+    position: absolute;
+    left: 7%;
+    bottom: 29%;
+    z-index: 10;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: clamp(35px, calc(75px * var(--ui-scale, 1)), 35px);
+    font-family: "Sirin Stencil", cursive;
 }
-
+#Credits {
+    position: absolute;
+    left: 7%;
+    bottom: 19%;
+    z-index: 10;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: clamp(35px, calc(75px * var(--ui-scale, 1)), 35px);
+    font-family: "Sirin Stencil", cursive;
+}
 #Quitter {
-    bottom: clamp(60px, 9vh, 100px);
+
+    position: absolute;
+    left: 7%;
+    bottom: 9%;
+    z-index: 10;
+    font-family: 'Sirin Stencil', cursive;
+    font-size: clamp(35px, calc(75px * var(--ui-scale, 1)), 35px);
+    color: white;
+    background-color: transparent;
+    border: none;
+
 }

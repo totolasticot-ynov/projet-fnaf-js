@@ -4,6 +4,8 @@ class Game {
     constructor() {
         this.videoPlayer = null;
         this.container = null;
+        this.stage = null;
+        this.videoRatio = 16 / 9;
     }
 
     async init() {
@@ -15,32 +17,58 @@ class Game {
             return;
         }
 
+        this.stage = document.getElementById('menu-stage');
+        if (!this.stage) {
+            console.error(' Zone de menu introuvable');
+            return;
+        }
+
         await this.playIntroVideo();
+
+        window.addEventListener('resize', () => this.updateStageLayout());
+        this.updateStageLayout();
         
         console.log('Jeu lancé');
     }
 
     async playIntroVideo() {
-        this.videoPlayer = new VideoPlayer('Opening/FIVE_NIGHT_AT_YNOV.mp4');
+        this.videoPlayer = new VideoPlayer('Opening/FIVE NIGHT AT YNOV .mp4');
         
         const videoElement = this.videoPlayer.createVideoElement();
-        
-        this.container.appendChild(videoElement);
 
-        this.videoPlayer.on('ended', () => {
-            console.log('Vidéo terminée');
-            this.onVideoEnded();
+        videoElement.addEventListener('loadedmetadata', () => {
+            if (videoElement.videoWidth && videoElement.videoHeight) {
+                this.videoRatio = videoElement.videoWidth / videoElement.videoHeight;
+                this.updateStageLayout();
+            }
         });
 
-        this.videoPlayer.on('error', (e) => {
-            console.error('Erreur de lecture:', e);
-        });
+        this.stage.prepend(videoElement);
 
         await this.videoPlayer.play();
     }
 
-    onVideoEnded() {
-        console.log(' Fin de la vidéo - prêt pour le jeu');
+    updateStageLayout() {
+        if (!this.container || !this.stage) {
+            return;
+        }
+
+        const containerWidth = this.container.clientWidth;
+        const containerHeight = this.container.clientHeight;
+
+        let stageWidth = containerWidth;
+        let stageHeight = stageWidth / this.videoRatio;
+
+        if (stageHeight > containerHeight) {
+            stageHeight = containerHeight;
+            stageWidth = stageHeight * this.videoRatio;
+        }
+
+        this.stage.style.width = `${stageWidth}px`;
+        this.stage.style.height = `${stageHeight}px`;
+
+        const uiScale = stageWidth / 1920;
+        this.stage.style.setProperty('--ui-scale', String(uiScale));
     }
 }
 

@@ -14,8 +14,8 @@ export class VideoPlayer {
         this.videoElement.playsInline = true;
         
         Object.assign(this.videoElement.style, {
-            width: '100vw',
-            height: '100vh',
+            width: '100%',
+            height: '100%',
             objectFit: 'contain',
             display: 'block'
         });
@@ -24,17 +24,13 @@ export class VideoPlayer {
     }
 
     async play() {
-        if (!this.videoElement) {
-            throw new Error('Élément vidéo non créé. Appelez createVideoElement() d\'abord.');
-        }
-
         try {
             await this.videoElement.play();
             this.isPlaying = true;
             console.log('Lecture vidéo démarrée avec le son');
         } catch (error) {
             console.warn('Autoplay bloqué:', error.message);
-            console.log('Cliquez sur l\'écran pour lancer la vidéo');
+            console.log(' Cliquez sur l\'écran pour lancer la vidéo');
             this.isPlaying = false;
             
             document.addEventListener('click', async () => {
