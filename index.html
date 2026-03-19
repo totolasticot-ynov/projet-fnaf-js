@@ -34,6 +34,25 @@
             height: 100%;
             object-fit: contain;
             z-index: 1;
+            pointer-events: none;
+        }
+
+        .options-label {
+            display: block;
+            margin-top: 18px;
+            margin-bottom: 8px;
+            font-size: 24px;
+        }
+
+        #volume-slider {
+            width: min(450px, 100%);
+            accent-color: red;
+        }
+
+        #volume-display {
+            margin-top: 10px;
+            font-size: 28px;
+            color: #ddd;
         }
     </style>
 </head>
@@ -45,10 +64,34 @@
             <button id="Jouer">Jouer</button>
             <button id="Options">Options</button>
             <button id="Credits">Crédits</button>
-            <button id="quit-btn">Quitter</button>
+            <button id="Quitter">Quitter</button>
+            <div id="credits-modal" class="modal hidden">
+                <div class="modal-content">
+                    <button id="close-credits" class="close-btn">&times;</button>
+
+                    <h2>Crédits</h2>
+                    
+                    <div class="credits-content credits-text">
+                    <p>Jeu Réalisé Par Thomas Dhordain, Romain Voynier, Preston Walter-Bassette et Augustin Benoit,Tous les droits relatifs à la franchise originale, y compris les personnages, l univers et les éléments associés, appartiennent à leur créateur, Scott Cawthon. </p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="options-modal" class="modal hidden">
+                <div class="modal-content">
+                    <button id="close-options" class="close-btn">&times;</button>
+                    <h2>Options</h2>
+                    <label class="options-label" for="volume-slider">Volume du jeu</label>
+                    <input id="volume-slider" type="range" min="0" max="100" step="1" value="50">
+                    <p id="volume-display">50%</p>
+                </div>
+            </div>
+
         </div>
     </div>
     
+    
     <script type="module" src="game.js"></script>
+    <script type="module" src="menu.js"></script>
 </body>
 </html>

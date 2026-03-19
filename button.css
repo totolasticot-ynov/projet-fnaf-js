@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Sirin+Stencil&display=swap');
 
+.hidden {
+    display: none;
+}
+
 #Jouer {
     position: absolute;
     left: 7%;
@@ -33,7 +37,7 @@
     font-size: clamp(35px, calc(75px * var(--ui-scale, 1)), 35px);
     font-family: "Sirin Stencil", cursive;
 }
-#quit-btn {
+#Quitter {
 
     position: absolute;
     left: 7%;
@@ -45,4 +49,51 @@
     background-color: transparent;
     border: none;
 
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center; 
+    opacity: 0;
+    pointer-events: none;
+}
+
+.modal-active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content{
+    position: relative;
+    background: linear-gradient(135deg, #000000, #1a1a1a);
+    border: 2px solid red;
+    padding: 20px;
+    border-radius: 5px;
+    color: white;
+    font-family: "Sirin Stencil", cursive;
+    font-size: clamp(20px, calc(40px * var(--ui-scale, 1)), 20px);
+}
+
+.credits-text {
+    font-size: clamp(35px, calc(75px * var(--ui-scale, 1)), 35px);
+    text-align: center;
+    color: #ddd;
+    margin: 10px 0;
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: transparent;
+    border: none;
+    color: red;
+    font-size: clamp(32px, calc(60px * var(--ui-scale, 1)), 32px);
+    cursor: pointer;
+    transition: color 0.2s ease;
 }
