@@ -5,6 +5,9 @@ class Game {
         this.videoPlayer = null;
         this.container = null;
         this.stage = null;
+        this.optionsPanel = null;
+        this.volumeSlider = null;
+        this.volumeValue = null;
         this.videoRatio = 16 / 9;
     }
 
@@ -22,6 +25,12 @@ class Game {
             console.error(' Zone de menu introuvable');
             return;
         }
+
+        this.optionsPanel = document.getElementById('options-panel');
+        this.volumeSlider = document.getElementById('volume-slider');
+        this.volumeValue = document.getElementById('volume-value');
+
+        this.setupUIEvents();
 
         await this.playIntroVideo();
 
@@ -69,6 +78,51 @@ class Game {
 
         const uiScale = stageWidth / 1920;
         this.stage.style.setProperty('--ui-scale', String(uiScale));
+    }
+
+    setupUIEvents() {
+        const optionsButton = document.getElementById('Options');
+        const closeOptionsButton = document.getElementById('close-options');
+
+        if (optionsButton) {
+            optionsButton.addEventListener('click', () => this.showOptions());
+        }
+
+        if (closeOptionsButton) {
+            closeOptionsButton.addEventListener('click', () => this.hideOptions());
+        }
+
+        if (this.volumeSlider && this.volumeValue) {
+            this.volumeSlider.addEventListener('input', (event) => {
+                const volume = Number(event.target.value);
+                this.volumeValue.textContent = String(volume);
+                this.setVolume(volume / 100);
+            });
+
+            // Valeur initiale
+            const initialVolume = Number(this.volumeSlider.value);
+            this.volumeValue.textContent = String(initialVolume);
+        }
+    }
+
+    showOptions() {
+        if (!this.optionsPanel) return;
+
+        this.optionsPanel.style.display = 'block';
+        this.optionsPanel.setAttribute('aria-hidden', 'false');
+    }
+
+    hideOptions() {
+        if (!this.optionsPanel) return;
+
+        this.optionsPanel.style.display = 'none';
+        this.optionsPanel.setAttribute('aria-hidden', 'true');
+    }
+
+    setVolume(value) {
+        if (this.videoPlayer) {
+            this.videoPlayer.setVolume(value);
+        }
     }
 }
 
