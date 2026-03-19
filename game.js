@@ -2,13 +2,14 @@ import { VideoPlayer } from './VideoPlayer.js';
 
 class Game {
     constructor() {
-        this.videoPlayer = null;
-        this.container = null;
-        this.stage = null;
-        this.optionsPanel = null;
-        this.volumeSlider = null;
-        this.volumeValue = null;
-        this.videoRatio = 16 / 9;
+        // Moi, Mooi, je prépare les variables pour la gestion du jeu et de l'UI
+        this.videoPlayer = null; // gestion de la vidéo d'intro
+        this.container = null; // conteneur global du jeu
+        this.stage = null; // zone du menu
+        this.optionsPanel = null; // panneau d'options (volume...)
+        this.volumeSlider = null; // slider de volume
+        this.volumeValue = null; // affichage du pourcentage
+        this.videoRatio = 16 / 9; // ratio vidéo par défaut
     }
 
     async init() {
@@ -81,27 +82,32 @@ class Game {
     }
 
     setupUIEvents() {
+        // J'associe les boutons et le slider à leur action
         const optionsButton = document.getElementById('Options');
         const closeOptionsButton = document.getElementById('close-options');
 
         if (optionsButton) {
+            // quand on ouvre le panneau options
             optionsButton.addEventListener('click', () => this.showOptions());
         }
 
         if (closeOptionsButton) {
+            // quand on ferme le panneau option
             closeOptionsButton.addEventListener('click', () => this.hideOptions());
         }
 
         if (this.volumeSlider && this.volumeValue) {
+            // dès que je bouge le slider, j'ajuste le son de la vidéo (0.0-1.0) et un texte 0-100
             this.volumeSlider.addEventListener('input', (event) => {
                 const volume = Number(event.target.value);
                 this.volumeValue.textContent = String(volume);
                 this.setVolume(volume / 100);
             });
 
-            // Valeur initiale
+            // Valeur initiale du volume à l'ouverture
             const initialVolume = Number(this.volumeSlider.value);
             this.volumeValue.textContent = String(initialVolume);
+            this.setVolume(initialVolume / 100); // par sécurité on applique directement
         }
     }
 
