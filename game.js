@@ -8,6 +8,15 @@ class Game {
         this.videoRatio = 16 / 9;
     }
 
+    getSavedVolume() {
+        const stored = Number(localStorage.getItem('gameVolume'));
+        if (Number.isNaN(stored)) {
+            return 0.5;
+        }
+
+        return Math.max(0, Math.min(1, stored));
+    }
+
     async init() {
         console.log('Lancement du jeu...');
         
@@ -24,7 +33,6 @@ class Game {
         }
 
         await this.playIntroVideo();
-        this.setupMenuButtons();
 
         window.addEventListener('resize', () => this.updateStageLayout());
         this.updateStageLayout();
@@ -36,6 +44,7 @@ class Game {
         this.videoPlayer = new VideoPlayer('Opening/FIVE NIGHT AT YNOV .mp4');
         
         const videoElement = this.videoPlayer.createVideoElement();
+        this.videoPlayer.setVolume(this.getSavedVolume());
 
         videoElement.addEventListener('loadedmetadata', () => {
             if (videoElement.videoWidth && videoElement.videoHeight) {
@@ -48,47 +57,49 @@ class Game {
 
         await this.videoPlayer.play();
     }
+    setupUIEvents() {
+        const optionsButton = document.getElementById('Options');
+        const closeOptionsButton = document.getElementById('close-options');
 
-    updateStageLayout() {
-        if (!this.container || !this.stage) {
-            return;
+        if (optionsButton) {
+            optionsButton.addEventListener('click', () => this.showOptions());
         }
 
-        const containerWidth = this.container.clientWidth;
-        const containerHeight = this.container.clientHeight;
-
-        let stageWidth = containerWidth;
-        let stageHeight = stageWidth / this.videoRatio;
-
-        if (stageHeight > containerHeight) {
-            stageHeight = containerHeight;
-            stageWidth = stageHeight * this.videoRatio;
+        if (closeOptionsButton) {
+            closeOptionsButton.addEventListener('click', () => this.hideOptions());
         }
 
-        this.stage.style.width = `${stageWidth}px`;
-        this.stage.style.height = `${stageHeight}px`;
+        if (this.volumeSlider && this.volumeValue) {
+            this.volumeSlider.addEventListener('input', (event) => {
+                const volume = Number(event.target.value);
+                this.volumeValue.textContent = String(volume);
+                this.setVolume(volume / 100);
+            });
 
-        const uiScale = stageWidth / 1920;
-        this.stage.style.setProperty('--ui-scale', String(uiScale));
+            const initialVolume = Number(this.volumeSlider.value);
+            this.volumeValue.textContent = String(initialVolume);
+            this.setVolume(initialVolume / 100); 
+        }
     }
 
-    setupMenuButtons() {
-        const quitButton = document.getElementById('quit-btn');
-        if (!quitButton) {
-            return;
+    showOptions() {
+        if (!this.optionsPanel) return;
+
+        this.optionsPanel.style.display = 'block';
+        this.optionsPanel.setAttribute('aria-hidden', 'false');
+    }
+
+    hideOptions() {
+        if (!this.optionsPanel) return;
+
+        this.optionsPanel.style.display = 'none';
+        this.optionsPanel.setAttribute('aria-hidden', 'true');
+    }
+
+    setVolume(value) {
+        if (this.videoPlayer) {
+            this.videoPlayer.setVolume(value);
         }
-
-        quitButton.addEventListener('click', () => {
-            if (window.opener || window.history.length <= 1) {
-                window.close();
-            }
-
-            setTimeout(() => {
-                if (!window.closed) {
-                    window.location.replace('about:blank');
-                }
-            }, 50);
-        });
     }
 }
 
