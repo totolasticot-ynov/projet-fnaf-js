@@ -14,6 +14,7 @@ export class VideoPlayer {
         this.videoElement.autoplay = true;
         this.videoElement.loop = true;
         this.videoElement.playsInline = true;
+        this.videoElement.loop = true;
         
         Object.assign(this.videoElement.style, {
             width: '100%',
