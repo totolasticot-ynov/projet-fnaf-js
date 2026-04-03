@@ -1,5 +1,6 @@
 window.addEventListener("DOMContentLoaded", () => {
     const VOLUME_KEY = "gameVolume";
+    const btnPlay = document.getElementById("Jouer");
     const btnOptions = document.getElementById("Options");
     const optionsModal = document.getElementById("options-modal");
     const closeOptionsBtn = document.getElementById("close-options");
@@ -89,7 +90,6 @@ window.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Gestionnaire pour le bouton Quitter
     if (quitBtn) {
         quitBtn.addEventListener("click", () => {
             if (window.opener || window.history.length <= 1) {
@@ -101,6 +101,30 @@ window.addEventListener("DOMContentLoaded", () => {
                     }
                 }, 50);
             }
+        });
+    }
+
+    if (btnPlay) {
+        btnPlay.addEventListener("click", () => {
+            const menuStage = document.getElementById("menu-stage");
+            if (!menuStage) return;
+
+            menuStage.innerHTML = "";
+            menuStage.style.display = "flex";
+            menuStage.style.justifyContent = "center";
+            menuStage.style.alignItems = "center";
+            menuStage.style.backgroundColor = "#000";
+
+            const officeImage = document.createElement("img");
+            officeImage.src = "Assets/office.png";
+            officeImage.alt = "Office";
+            officeImage.style.width = "100%";
+            officeImage.style.height = "100%";
+            officeImage.style.objectFit = "contain";
+            officeImage.style.cursor = "default";
+            officeImage.draggable = false;
+
+            menuStage.appendChild(officeImage);
         });
     }
 });
