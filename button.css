@@ -119,8 +119,8 @@
 
 #skip-timer-btn {
     position: absolute;
-    top: clamp(16px, 3vh, 30px);
-    left: clamp(16px, 3vw, 36px);
+    top: 90px;
+    left: 90px;
     z-index: 30;
     background: rgba(0, 0, 0, 0.65);
     color: #fff;
@@ -134,4 +134,20 @@
 
 #skip-timer-btn:hover {
     background: rgba(120, 0, 0, 0.8);
+}
+
+#jumpscare-btn {
+    position: absolute;
+    top: 140px;
+    left: 90px;
+    z-index: 30;
+    background: rgba(20, 20, 20, 0.75);
+    color: #fff;
+    border: 1px solid #ff4040;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#jumpscare-btn:hover {
+    background: rgba(180, 10, 10, 0.85);
 }

@@ -1,4 +1,5 @@
 import { ShowWinScreen, startGameTimer, stopGameTimer } from "./time.js";
+import { playJumpscareVideoAsync } from "./home.js";
 
 window.addEventListener("DOMContentLoaded", () => {
     const VOLUME_KEY = "gameVolume";
@@ -137,6 +138,15 @@ window.addEventListener("DOMContentLoaded", () => {
             });
 
             menuStage.appendChild(skipTimerButton);
+
+            const jumpscareButton = document.createElement("button");
+            jumpscareButton.id = "jumpscare-btn";
+            jumpscareButton.textContent = "Jumpscare";
+            jumpscareButton.addEventListener("click", async () => {
+                await playJumpscareVideoAsync();
+            });
+
+            menuStage.appendChild(jumpscareButton);
             startGameTimer(menuStage, 6 * 60, () => ShowWinScreen(menuStage));
         });
     }
