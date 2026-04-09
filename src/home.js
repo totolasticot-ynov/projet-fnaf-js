@@ -2,14 +2,13 @@ import { VideoPlayer } from './VideoPlayer.js';
 
 class Game {
     constructor() {
-        // Moi, Mooi, je prépare les variables pour la gestion du jeu et de l'UI
-        this.videoPlayer = null; // gestion de la vidéo d'intro
-        this.container = null; // conteneur global du jeu
-        this.stage = null; // zone du menu
-        this.optionsPanel = null; // panneau d'options (volume...)
-        this.volumeSlider = null; // slider de volume
-        this.volumeValue = null; // affichage du pourcentage
-        this.videoRatio = 16 / 9; // ratio vidéo par défaut
+        this.videoPlayer = null;
+        this.container = null;
+        this.stage = null;
+        this.optionsPanel = null;
+        this.volumeSlider = null;
+        this.volumeValue = null;
+        this.videoRatio = 16 / 9;
     }
 
     getSavedVolume() {
@@ -23,16 +22,16 @@ class Game {
 
     async init() {
         console.log('Lancement du jeu...');
-        
+
         this.container = document.getElementById('game-container');
         if (!this.container) {
-            console.error(' Conteneur introuvable');
+            console.error('Conteneur introuvable');
             return;
         }
 
         this.stage = document.getElementById('menu-stage');
         if (!this.stage) {
-            console.error(' Zone de menu introuvable');
+            console.error('Zone de menu introuvable');
             return;
         }
 
@@ -46,13 +45,13 @@ class Game {
 
         window.addEventListener('resize', () => this.updateStageLayout());
         this.updateStageLayout();
-        
-        console.log('Jeu lancé');
+
+        console.log('Jeu lance');
     }
 
     async playIntroVideo() {
-        this.videoPlayer = new VideoPlayer('Opening/FIVE NIGHT AT YNOV .mp4');
-        
+        this.videoPlayer = new VideoPlayer('Assets/video/FIVE NIGHT AT YNOV .mp4');
+
         const videoElement = this.videoPlayer.createVideoElement();
         this.videoPlayer.setVolume(this.getSavedVolume());
 
@@ -67,6 +66,14 @@ class Game {
 
         await this.videoPlayer.play();
     }
+
+    updateStageLayout() {
+        if (!this.stage) return;
+
+        this.stage.style.width = '100vw';
+        this.stage.style.height = '100vh';
+    }
+
     setupUIEvents() {
         const optionsButton = document.getElementById('Options');
         const closeOptionsButton = document.getElementById('close-options');
@@ -88,57 +95,7 @@ class Game {
 
             const initialVolume = Number(this.volumeSlider.value);
             this.volumeValue.textContent = String(initialVolume);
-            this.setVolume(initialVolume / 100); 
-        }
-    }
-
-    showOptions() {
-        if (!this.optionsPanel) return;
-
-        this.optionsPanel.style.display = 'block';
-        this.optionsPanel.setAttribute('aria-hidden', 'false');
-    }
-
-    hideOptions() {
-        if (!this.optionsPanel) return;
-
-        this.optionsPanel.style.display = 'none';
-        this.optionsPanel.setAttribute('aria-hidden', 'true');
-    }
-
-    setVolume(value) {
-        if (this.videoPlayer) {
-            this.videoPlayer.setVolume(value);
-        }
-    }
-
-    setupUIEvents() {
-        // J'associe les boutons et le slider à leur action
-        const optionsButton = document.getElementById('Options');
-        const closeOptionsButton = document.getElementById('close-options');
-
-        if (optionsButton) {
-            // quand on ouvre le panneau options
-            optionsButton.addEventListener('click', () => this.showOptions());
-        }
-
-        if (closeOptionsButton) {
-            // quand on ferme le panneau option
-            closeOptionsButton.addEventListener('click', () => this.hideOptions());
-        }
-
-        if (this.volumeSlider && this.volumeValue) {
-            // dès que je bouge le slider, j'ajuste le son de la vidéo (0.0-1.0) et un texte 0-100
-            this.volumeSlider.addEventListener('input', (event) => {
-                const volume = Number(event.target.value);
-                this.volumeValue.textContent = String(volume);
-                this.setVolume(volume / 100);
-            });
-
-            // Valeur initiale du volume à l'ouverture
-            const initialVolume = Number(this.volumeSlider.value);
-            this.volumeValue.textContent = String(initialVolume);
-            this.setVolume(initialVolume / 100); // par sécurité on applique directement
+            this.setVolume(initialVolume / 100);
         }
     }
 
