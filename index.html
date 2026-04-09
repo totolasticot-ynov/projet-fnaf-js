@@ -58,13 +58,15 @@
 </head>
 <body>
     <link rel="stylesheet" href="button.css">
-    <link rel="stylesheet" href="game.css">
+    <link rel="stylesheet" href="menu.css">
     <div id="game-container">
         <div id="menu-stage">
-            <button id="Jouer">Jouer</button>
-            <button id="Options">Options</button>
-            <button id="Credits">Crédits</button>
-            <button id="Quitter">Quitter</button>
+            <div id="menu-buttons">
+                <button id="Jouer">Jouer</button>
+                <button id="Options">Options</button>
+                <button id="Credits">Crédits</button>
+                <button id="Quitter">Quitter</button>
+            </div>
             <div id="credits-modal" class="modal hidden">
                 <div class="modal-content">
                     <button id="close-credits" class="close-btn">&times;</button>
@@ -91,7 +93,7 @@
     </div>
     
     
-    <script type="module" src="game.js"></script>
+    <script type="module" src="home.js"></script>
     <script type="module" src="menu.js"></script>
 </body>
 </html>

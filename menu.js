@@ -1,3 +1,5 @@
+import { ShowWinScreen, startGameTimer, stopGameTimer } from "./time.js";
+
 window.addEventListener("DOMContentLoaded", () => {
     const VOLUME_KEY = "gameVolume";
     const btnPlay = document.getElementById("Jouer");
@@ -109,6 +111,7 @@ window.addEventListener("DOMContentLoaded", () => {
             const menuStage = document.getElementById("menu-stage");
             if (!menuStage) return;
 
+            stopGameTimer();
             menuStage.innerHTML = "";
             menuStage.style.display = "flex";
             menuStage.style.justifyContent = "center";
@@ -125,6 +128,7 @@ window.addEventListener("DOMContentLoaded", () => {
             officeImage.draggable = false;
 
             menuStage.appendChild(officeImage);
+            startGameTimer(menuStage, 6 * 60, () => ShowWinScreen(menuStage));
         });
     }
 });
