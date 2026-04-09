@@ -14,7 +14,6 @@ export class VideoPlayer {
         this.videoElement.autoplay = true;
         this.videoElement.loop = true;
         this.videoElement.playsInline = true;
-        this.videoElement.loop = true;
         
         Object.assign(this.videoElement.style, {
             width: '100%',
@@ -31,10 +30,7 @@ export class VideoPlayer {
         try {
             await this.videoElement.play();
             this.isPlaying = true;
-            console.log('Lecture vidéo démarrée automatiquement');
         } catch (error) {
-            console.warn('Autoplay bloqué:', error.message);
-            console.log(' Cliquez sur l\'écran pour lancer la vidéo');
             this.isPlaying = false;
             
             document.addEventListener('click', async () => {

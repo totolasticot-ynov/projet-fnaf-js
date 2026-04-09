@@ -116,3 +116,22 @@
     pointer-events: none;
     user-select: none;
 }
+
+#skip-timer-btn {
+    position: absolute;
+    top: clamp(16px, 3vh, 30px);
+    left: clamp(16px, 3vw, 36px);
+    z-index: 30;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    border: 1px solid #c33;
+    border-radius: 6px;
+    font-family: "Sirin Stencil", cursive;
+    font-size: 18px;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+#skip-timer-btn:hover {
+    background: rgba(120, 0, 0, 0.8);
+}

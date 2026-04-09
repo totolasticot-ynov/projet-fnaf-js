@@ -128,6 +128,15 @@ window.addEventListener("DOMContentLoaded", () => {
             officeImage.draggable = false;
 
             menuStage.appendChild(officeImage);
+
+            const skipTimerButton = document.createElement("button");
+            skipTimerButton.id = "skip-timer-btn";
+            skipTimerButton.textContent = "Finir timer";
+            skipTimerButton.addEventListener("click", () => {
+                ShowWinScreen(menuStage);
+            });
+
+            menuStage.appendChild(skipTimerButton);
             startGameTimer(menuStage, 6 * 60, () => ShowWinScreen(menuStage));
         });
     }
