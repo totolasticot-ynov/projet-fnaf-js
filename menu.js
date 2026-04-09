@@ -19,6 +19,86 @@ window.addEventListener("DOMContentLoaded", () => {
         const stored = Number(localStorage.getItem(VOLUME_KEY));
         return Number.isNaN(stored) ? 0.5 : clampVolume(stored);
     };
+
+    const launchGameScene = (menuStage) => {
+        stopGameTimer();
+        menuStage.innerHTML = "";
+        menuStage.style.display = "flex";
+        menuStage.style.justifyContent = "center";
+        menuStage.style.alignItems = "center";
+        menuStage.style.backgroundColor = "#000";
+
+        const officeImage = document.createElement("img");
+        officeImage.src = "Assets/office.png";
+        officeImage.alt = "Office";
+        officeImage.style.width = "100%";
+        officeImage.style.height = "100%";
+        officeImage.style.objectFit = "contain";
+        officeImage.style.cursor = "default";
+        officeImage.draggable = false;
+
+        menuStage.appendChild(officeImage);
+
+        const skipTimerButton = document.createElement("button");
+        skipTimerButton.id = "skip-timer-btn";
+        skipTimerButton.textContent = "Finir timer";
+        skipTimerButton.addEventListener("click", () => {
+            ShowWinScreen(menuStage);
+        });
+
+        menuStage.appendChild(skipTimerButton);
+
+        const jumpscareButton = document.createElement("button");
+        jumpscareButton.id = "jumpscare-btn";
+        jumpscareButton.textContent = "Jumpscare";
+        jumpscareButton.addEventListener("click", async () => {
+            await playJumpscareVideoAsync();
+        });
+
+        menuStage.appendChild(jumpscareButton);
+        startGameTimer(menuStage, 6 * 60, () => ShowWinScreen(menuStage));
+    };
+
+    const playGameIntroThenLaunch = async (menuStage) => {
+        stopGameTimer();
+        menuStage.innerHTML = "";
+        menuStage.style.display = "flex";
+        menuStage.style.justifyContent = "center";
+        menuStage.style.alignItems = "center";
+        menuStage.style.backgroundColor = "#000";
+
+        const introVideo = document.createElement("video");
+        introVideo.src = "Assets/Intro-Fnaf.mp4";
+        introVideo.autoplay = true;
+        introVideo.controls = false;
+        introVideo.loop = false;
+        introVideo.playsInline = true;
+        introVideo.volume = readVolume();
+        introVideo.style.width = "100%";
+        introVideo.style.height = "100%";
+        introVideo.style.objectFit = "contain";
+
+        let hasLaunchedGame = false;
+        const launchIfNeeded = () => {
+            if (hasLaunchedGame) {
+                return;
+            }
+
+            hasLaunchedGame = true;
+            launchGameScene(menuStage);
+        };
+
+        introVideo.addEventListener("ended", launchIfNeeded, { once: true });
+        menuStage.appendChild(introVideo);
+
+        try {
+            await introVideo.play();
+        } catch {
+            menuStage.addEventListener("click", () => {
+                introVideo.play().catch(() => {});
+            }, { once: true });
+        }
+    };
     const applyVolumeToMenuVideo = (volume) => {
         const menuVideo = document.querySelector("#menu-stage video");
         if (menuVideo) {
@@ -63,11 +143,6 @@ window.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    if (!btnCredits || !creditsModal || !closeBtn) {
-        console.warn("Credits modal elements not found: check IDs Credits, credits-modal, close-credits.");
-        return;
-    }
-
     const openCredits = () => {
         creditsModal.classList.remove("hidden");
         creditsModal.classList.add("modal-active");
@@ -108,46 +183,11 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     if (btnPlay) {
-        btnPlay.addEventListener("click", () => {
+        btnPlay.addEventListener("click", async () => {
             const menuStage = document.getElementById("menu-stage");
             if (!menuStage) return;
 
-            stopGameTimer();
-            menuStage.innerHTML = "";
-            menuStage.style.display = "flex";
-            menuStage.style.justifyContent = "center";
-            menuStage.style.alignItems = "center";
-            menuStage.style.backgroundColor = "#000";
-
-            const officeImage = document.createElement("img");
-            officeImage.src = "Assets/office.png";
-            officeImage.alt = "Office";
-            officeImage.style.width = "100%";
-            officeImage.style.height = "100%";
-            officeImage.style.objectFit = "contain";
-            officeImage.style.cursor = "default";
-            officeImage.draggable = false;
-
-            menuStage.appendChild(officeImage);
-
-            const skipTimerButton = document.createElement("button");
-            skipTimerButton.id = "skip-timer-btn";
-            skipTimerButton.textContent = "Finir timer";
-            skipTimerButton.addEventListener("click", () => {
-                ShowWinScreen(menuStage);
-            });
-
-            menuStage.appendChild(skipTimerButton);
-
-            const jumpscareButton = document.createElement("button");
-            jumpscareButton.id = "jumpscare-btn";
-            jumpscareButton.textContent = "Jumpscare";
-            jumpscareButton.addEventListener("click", async () => {
-                await playJumpscareVideoAsync();
-            });
-
-            menuStage.appendChild(jumpscareButton);
-            startGameTimer(menuStage, 6 * 60, () => ShowWinScreen(menuStage));
+            await playGameIntroThenLaunch(menuStage);
         });
     }
 });
