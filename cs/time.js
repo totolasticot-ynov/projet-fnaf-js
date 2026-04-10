@@ -41,7 +41,9 @@ export async function ShowWinScreen(targetElement) {
 		}
 	}
 
-	await playEndVideoAsync();
+	await playEndVideoAsync(() => {
+		window.location.reload();
+	});
 }
 
 export function startGameTimer(targetElement, durationInSeconds = DEFAULT_TIMER_SECONDS, onTimerEnd) {

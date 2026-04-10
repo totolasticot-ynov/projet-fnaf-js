@@ -4,12 +4,12 @@ import { playEndSequence } from './end.js';
 
 let activeGameInstance = null;
 
-export function playEndVideoAsync() {
+export function playEndVideoAsync(onEnded) {
     if (!activeGameInstance) {
         return Promise.resolve();
     }
 
-    return activeGameInstance.playEndVideo();
+    return activeGameInstance.playEndVideo(onEnded);
 }
 
 export function playJumpscareVideoAsync() {
@@ -70,14 +70,15 @@ class Game {
         });
     }
 
-    playEndVideo() {
+    playEndVideo(onEnded) {
         return playEndSequence(
             this.stage,
             this.getSavedVolume(),
             (videoWidth, videoHeight) => {
                 this.videoRatio = videoWidth / videoHeight;
                 this.updateStageLayout();
-            }
+            },
+            onEnded
         ).then((player) => {
             this.videoPlayer = player;
         });
