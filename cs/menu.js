@@ -29,7 +29,7 @@ window.addEventListener("DOMContentLoaded", () => {
         menuStage.style.backgroundColor = "#000";
 
         const officeImage = document.createElement("img");
-        officeImage.src = "Assets/office.png";
+        officeImage.src = "Assets/images/office.png";
         officeImage.alt = "Office";
         officeImage.style.width = "100%";
         officeImage.style.height = "100%";
