@@ -1,0 +1,107 @@
+function createControlButton(label, side, offsetPx) {
+	const button = document.createElement("button");
+	button.textContent = label;
+
+	Object.assign(button.style, {
+		position: "absolute",
+		top: `${offsetPx}px`,
+		left: side === "left" ? "20px" : "auto",
+		right: side === "right" ? "20px" : "auto",
+		width: "74px",
+		height: "34px",
+		padding: "0",
+		border: "2px solid #5f6a71",
+		borderRadius: "2px",
+		background: "linear-gradient(180deg, #2b3136 0%, #171b1e 100%)",
+		color: "#dbe3ea",
+		fontWeight: "700",
+		fontSize: "11px",
+		letterSpacing: "0.6px",
+		textTransform: "uppercase",
+		cursor: "pointer",
+		boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12), 0 0 8px rgba(0,0,0,0.55)",
+		zIndex: "9"
+	});
+
+	return button;
+}
+
+export function initLightControls(menuStage) {
+	const leftCorridorLight = document.createElement("div");
+	const rightCorridorLight = document.createElement("div");
+
+	Object.assign(leftCorridorLight.style, {
+		position: "absolute",
+		top: "0",
+		bottom: "0",
+		left: "0",
+		width: "38%",
+		zIndex: "4",
+		opacity: "0",
+		pointerEvents: "none",
+		transition: "opacity 150ms ease",
+		background: "linear-gradient(90deg, rgba(255, 236, 145, 0.72) 0%, rgba(255, 236, 145, 0.32) 42%, rgba(255, 236, 145, 0) 100%)"
+	});
+
+	Object.assign(rightCorridorLight.style, {
+		position: "absolute",
+		top: "0",
+		bottom: "0",
+		right: "0",
+		width: "38%",
+		zIndex: "4",
+		opacity: "0",
+		pointerEvents: "none",
+		transition: "opacity 150ms ease",
+		background: "linear-gradient(270deg, rgba(255, 236, 145, 0.72) 0%, rgba(255, 236, 145, 0.32) 42%, rgba(255, 236, 145, 0) 100%)"
+	});
+
+	menuStage.appendChild(leftCorridorLight);
+	menuStage.appendChild(rightCorridorLight);
+
+	const leftButton = createControlButton("Lumiere G", "left", 50 + 170);
+	const rightButton = createControlButton("Lumiere D", "right", 50 + 170);
+
+	menuStage.appendChild(leftButton);
+	menuStage.appendChild(rightButton);
+
+	const state = {
+		left: false,
+		right: false
+	};
+
+	const update = () => {
+		leftCorridorLight.style.opacity = state.left ? "1" : "0";
+		rightCorridorLight.style.opacity = state.right ? "1" : "0";
+		leftButton.style.borderColor = state.left ? "#b5ff9f" : "#5f6a71";
+		rightButton.style.borderColor = state.right ? "#b5ff9f" : "#5f6a71";
+		leftButton.style.boxShadow = state.left ? "inset 0 1px 0 rgba(255,255,255,0.12), 0 0 14px rgba(132, 255, 111, 0.75)" : "inset 0 1px 0 rgba(255,255,255,0.12), 0 0 8px rgba(0,0,0,0.55)";
+		rightButton.style.boxShadow = state.right ? "inset 0 1px 0 rgba(255,255,255,0.12), 0 0 14px rgba(132, 255, 111, 0.75)" : "inset 0 1px 0 rgba(255,255,255,0.12), 0 0 8px rgba(0,0,0,0.55)";
+		leftButton.style.background = state.left ? "linear-gradient(180deg, #24442a 0%, #142717 100%)" : "linear-gradient(180deg, #2b3136 0%, #171b1e 100%)";
+		rightButton.style.background = state.right ? "linear-gradient(180deg, #24442a 0%, #142717 100%)" : "linear-gradient(180deg, #2b3136 0%, #171b1e 100%)";
+	};
+
+	leftButton.addEventListener("click", () => {
+		state.left = !state.left;
+		update();
+	});
+
+	rightButton.addEventListener("click", () => {
+		state.right = !state.right;
+		update();
+	});
+
+	update();
+
+	return {
+		isLightOn(side) {
+			return side === "left" ? state.left : state.right;
+		},
+		destroy() {
+			leftButton.remove();
+			rightButton.remove();
+			leftCorridorLight.remove();
+			rightCorridorLight.remove();
+		}
+	};
+}

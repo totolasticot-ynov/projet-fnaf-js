@@ -1,6 +1,8 @@
 import { playEndVideoAsync } from "./home.js";
 
 const DEFAULT_TIMER_SECONDS = 6 * 60;
+const NIGHT_KEY = "currentNight";
+const MAX_NIGHT = 3;
 
 let activeIntervalId = null;
 let activeTimerElement = null;
@@ -33,6 +35,11 @@ export function stopGameTimer() {
 
 export async function ShowWinScreen(targetElement) {
 	stopGameTimer();
+
+	const currentNight = Number(localStorage.getItem(NIGHT_KEY));
+	const safeNight = Number.isNaN(currentNight) ? 1 : Math.max(1, Math.min(MAX_NIGHT, Math.floor(currentNight)));
+	const nextNight = Math.min(MAX_NIGHT, safeNight + 1);
+	localStorage.setItem(NIGHT_KEY, String(nextNight));
 
 	if (targetElement) {
 		const skipButton = targetElement.querySelector("#skip-timer-btn");

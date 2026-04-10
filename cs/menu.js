@@ -1,5 +1,8 @@
 import { ShowWinScreen, startGameTimer, stopGameTimer } from "./time.js";
 import { playJumpscareVideoAsync } from "./home.js";
+import { createNightLabel, readNight, startSpringtrapBehavior } from "./enemy.js";
+import { initDoorControls } from "./doors.js";
+import { initLightControls } from "./light.js";
 
 window.addEventListener("DOMContentLoaded", () => {
     const VOLUME_KEY = "gameVolume";
@@ -21,6 +24,7 @@ window.addEventListener("DOMContentLoaded", () => {
     };
 
     const launchGameScene = (menuStage) => {
+        const currentNight = readNight();
         stopGameTimer();
         menuStage.innerHTML = "";
         menuStage.style.display = "flex";
@@ -38,12 +42,25 @@ window.addEventListener("DOMContentLoaded", () => {
         officeImage.draggable = false;
 
         menuStage.appendChild(officeImage);
+        menuStage.appendChild(createNightLabel(currentNight));
+
+        const doorControls = initDoorControls(menuStage);
+        const lightControls = initLightControls(menuStage);
+
+        const stopEnemyBehavior = startSpringtrapBehavior(menuStage, currentNight);
+
+        const handleWin = () => {
+            stopEnemyBehavior();
+            doorControls.destroy();
+            lightControls.destroy();
+            ShowWinScreen(menuStage);
+        };
 
         const skipTimerButton = document.createElement("button");
         skipTimerButton.id = "skip-timer-btn";
         skipTimerButton.textContent = "Finir timer";
         skipTimerButton.addEventListener("click", () => {
-            ShowWinScreen(menuStage);
+            handleWin();
         });
 
         menuStage.appendChild(skipTimerButton);
@@ -56,7 +73,7 @@ window.addEventListener("DOMContentLoaded", () => {
         });
 
         menuStage.appendChild(jumpscareButton);
-        startGameTimer(menuStage, 6 * 60, () => ShowWinScreen(menuStage));
+        startGameTimer(menuStage, 6 * 60, handleWin);
     };
 
     const playGameIntroThenLaunch = async (menuStage) => {
