@@ -7,7 +7,7 @@ export async function playEndSequence(stage, volume, onVideoReady, onEnded) {
 
 	stage.innerHTML = '';
 
-	const player = new VideoPlayer('Assets/Win-Fnaf.mp4');
+	const player = new VideoPlayer('Assets/video/Win-Fnaf.mp4');
 	const videoElement = player.createVideoElement();
 	player.setLoop(false);
 	player.setVolume(volume);

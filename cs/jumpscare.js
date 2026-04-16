@@ -7,7 +7,7 @@ export async function playJumpscareSequence(stage, volume, onVideoReady, onEnded
 
 	stage.innerHTML = '';
 
-	const player = new VideoPlayer('Assets/Jumpscare.mp4');
+	const player = new VideoPlayer('Assets/video/Jumpscare.mp4');
 	const videoElement = player.createVideoElement();
 	player.setLoop(false);
 	player.setVolume(volume);

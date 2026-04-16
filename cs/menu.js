@@ -103,7 +103,7 @@ window.addEventListener("DOMContentLoaded", () => {
         menuStage.style.backgroundColor = "#000";
 
         const introVideo = document.createElement("video");
-        introVideo.src = "Assets/Intro-Fnaf.mp4";
+        introVideo.src = "Assets/video/Intro-Fnaf.mp4";
         introVideo.autoplay = true;
         introVideo.controls = false;
         introVideo.loop = false;
