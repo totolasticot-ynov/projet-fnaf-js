@@ -1,5 +1,6 @@
 import { ShowWinScreen, startGameTimer, stopGameTimer } from "./time.js";
 import { playJumpscareVideoAsync } from "./home.js";
+import { playGameOverSequence } from "./gameover.js";
 import { createNightLabel, readNight, startSpringtrapBehavior } from "./enemy.js";
 import { initDoorControls } from "./doors.js";
 import { initLightControls } from "./light.js";
@@ -47,9 +48,26 @@ window.addEventListener("DOMContentLoaded", () => {
         const doorControls = initDoorControls(menuStage);
         const lightControls = initLightControls(menuStage);
 
-        const stopEnemyBehavior = startSpringtrapBehavior(menuStage, currentNight);
+        let hasEnded = false;
+        const stopEnemyBehavior = startSpringtrapBehavior(menuStage, currentNight, doorControls, async () => {
+            if (hasEnded) {
+                return;
+            }
+
+            hasEnded = true;
+            stopEnemyBehavior();
+            doorControls.destroy();
+            lightControls.destroy();
+            stopGameTimer();
+            await playGameOverSequence(menuStage, readVolume());
+        });
 
         const handleWin = () => {
+            if (hasEnded) {
+                return;
+            }
+
+            hasEnded = true;
             stopEnemyBehavior();
             doorControls.destroy();
             lightControls.destroy();

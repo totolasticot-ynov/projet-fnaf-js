@@ -1,6 +1,11 @@
 const NIGHT_KEY = "currentNight";
 const MAX_NIGHT = 3;
 const FOOTSTEP_AUDIO_PATH = "Assets/sounds/FNAF Footsteps - Gaming Sound Effect (HD) - Communist Sound Effects (1080p).mp4";
+const ENEMY_ATTACK_TIMEOUT_BY_NIGHT = {
+	1: 10000,
+	2: 7000,
+	3: 5000
+};
 
 export function readNight() {
 	const storedNight = Number(localStorage.getItem(NIGHT_KEY));
@@ -13,6 +18,10 @@ export function readNight() {
 
 function getEnemyMoveChance(night) {
 	return Math.min(0.9, night / 5);
+}
+
+function getEnemyAttackTimeout(night) {
+	return ENEMY_ATTACK_TIMEOUT_BY_NIGHT[night] ?? ENEMY_ATTACK_TIMEOUT_BY_NIGHT[1];
 }
 
 function playDirectionalFootsteps(side) {
@@ -74,73 +83,72 @@ export function createNightLabel(night) {
 	return nightLabel;
 }
 
-export function startSpringtrapBehavior(menuStage, night) {
-	const springtrap = document.createElement("img");
-	springtrap.id = "springtrap-enemy";
-	springtrap.src = "Assets/Springtrap.png";
-	springtrap.alt = "Springtrap";
-
-	Object.assign(springtrap.style, {
-		position: "absolute",
-		bottom: "20%",
-		width: "220px",
-		maxWidth: "28vw",
-		height: "auto",
-		zIndex: "5",
-		opacity: "0",
-		pointerEvents: "none",
-		transition: "opacity 220ms ease"
-	});
-
-	menuStage.appendChild(springtrap);
-
+export function startSpringtrapBehavior(menuStage, night, doorControls, onGameOver) {
 	const chance = getEnemyMoveChance(night);
-	let hideTimeoutId = null;
+	const attackTimeoutMs = getEnemyAttackTimeout(night);
+	let activeAttackTimeoutId = null;
+	let activeAttackSide = null;
+	let hasTriggeredGameOver = false;
 
-	const hideEnemy = () => {
-		springtrap.style.opacity = "0";
+	const clearActiveAttack = () => {
+		if (activeAttackTimeoutId !== null) {
+			clearTimeout(activeAttackTimeoutId);
+			activeAttackTimeoutId = null;
+		}
+
+		activeAttackSide = null;
+	};
+
+	const triggerGameOver = () => {
+		if (hasTriggeredGameOver) {
+			return;
+		}
+
+		hasTriggeredGameOver = true;
+		clearActiveAttack();
+
+		if (typeof onGameOver === "function") {
+			onGameOver();
+		}
+	};
+
+	const startAttack = (side) => {
+		if (activeAttackTimeoutId !== null) {
+			return;
+		}
+
+		activeAttackSide = side;
+		playDirectionalFootsteps(side);
+
+		activeAttackTimeoutId = setTimeout(() => {
+			activeAttackTimeoutId = null;
+
+			if (!doorControls || typeof doorControls.isDoorClosed !== "function" || !doorControls.isDoorClosed(activeAttackSide)) {
+				triggerGameOver();
+				return;
+			}
+
+			activeAttackSide = null;
+		}, attackTimeoutMs);
 	};
 
 	const moveEnemyToDoor = () => {
-		if (Math.random() >= chance) {
+		if (hasTriggeredGameOver || activeAttackTimeoutId !== null || Math.random() >= chance) {
 			return;
 		}
 
 		const goLeft = Math.random() < 0.5;
 		if (goLeft) {
-			springtrap.style.left = "14%";
-			springtrap.style.right = "auto";
-			springtrap.style.transform = "scaleX(1)";
-			playDirectionalFootsteps("left");
+			startAttack("left");
 		} else {
-			springtrap.style.right = "14%";
-			springtrap.style.left = "auto";
-			springtrap.style.transform = "scaleX(-1)";
-			playDirectionalFootsteps("right");
+			startAttack("right");
 		}
-
-		springtrap.style.opacity = "1";
-
-		if (hideTimeoutId !== null) {
-			clearTimeout(hideTimeoutId);
-		}
-
-		hideTimeoutId = setTimeout(() => {
-			hideEnemy();
-			hideTimeoutId = null;
-		}, 1200);
 	};
 
 	const intervalId = setInterval(moveEnemyToDoor, 2800);
 
 	return () => {
 		clearInterval(intervalId);
-
-		if (hideTimeoutId !== null) {
-			clearTimeout(hideTimeoutId);
-		}
-
-		hideEnemy();
-		springtrap.remove();
+		clearActiveAttack();
 	};
 }

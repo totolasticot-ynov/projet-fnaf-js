@@ -1,6 +1,6 @@
 import { VideoPlayer } from './VideoPlayer.js';
 
-export async function playJumpscareSequence(stage, volume, onVideoReady) {
+export async function playJumpscareSequence(stage, volume, onVideoReady, onEnded) {
 	if (!stage) {
 		return null;
 	}
@@ -17,6 +17,12 @@ export async function playJumpscareSequence(stage, volume, onVideoReady) {
 			onVideoReady(videoElement.videoWidth, videoElement.videoHeight);
 		}
 	});
+
+	if (typeof onEnded === 'function') {
+		videoElement.addEventListener('ended', () => {
+			onEnded();
+		}, { once: true });
+	}
 
 	stage.prepend(videoElement);
 	await player.play();
