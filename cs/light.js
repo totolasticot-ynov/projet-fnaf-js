@@ -87,11 +87,15 @@ export function initLightControls(menuStage) {
 	};
 
 	leftButton.addEventListener("click", () => {
+		const willBeTurnedOn = !state.left;
+		if (willBeTurnedOn && state.right) return;
 		state.left = !state.left;
 		update();
 	});
 
 	rightButton.addEventListener("click", () => {
+		const willBeTurnedOn = !state.right;
+		if (willBeTurnedOn && state.left) return;
 		state.right = !state.right;
 		update();
 	});
