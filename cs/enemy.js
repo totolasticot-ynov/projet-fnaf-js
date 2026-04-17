@@ -1,220 +1,82 @@
-const NIGHT_KEY = "currentNight";
-const MAX_NIGHT = 3;
-const FOOTSTEP_AUDIO_PATH = "Assets/sounds/FNAF Footsteps - Gaming Sound Effect (HD) - Communist Sound Effects (1080p).mp4";
-const ENEMY_ATTACK_TIMEOUT_BY_NIGHT = {
-	1: 10000,
-	2: 7000,
-	3: 5000
-};
+const NIGHT_KEY = "currentNight", MAX_NIGHT = 3;
+const FOOTSTEP_PATH = "Assets/sounds/FNAF Footsteps - Gaming Sound Effect (HD) - Communist Sound Effects (1080p).mp4";
+const TIMEOUT_BY_NIGHT = { 1: 10000, 2: 7000, 3: 5000 };
 
 export function readNight() {
-	const storedNight = Number(localStorage.getItem(NIGHT_KEY));
-	if (Number.isNaN(storedNight)) {
-		return 1;
-	}
-
-	return Math.max(1, Math.min(MAX_NIGHT, Math.floor(storedNight)));
+	const n = Number(localStorage.getItem(NIGHT_KEY));
+	return isNaN(n) ? 1 : Math.max(1, Math.min(MAX_NIGHT, Math.floor(n)));
 }
 
-function getEnemyMoveChance(night) {
-	return Math.min(0.9, night / 5);
-}
-
-function getEnemyAttackTimeout(night) {
-	return ENEMY_ATTACK_TIMEOUT_BY_NIGHT[night] ?? ENEMY_ATTACK_TIMEOUT_BY_NIGHT[1];
-}
+const getChance = (night) => Math.min(0.9, night / 5);
+const getTimeout = (night) => TIMEOUT_BY_NIGHT[night] ?? TIMEOUT_BY_NIGHT[1];
 
 function playDirectionalFootsteps(side) {
-	const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-	if (!AudioContextClass) {
-		return;
-	}
-
-	const audioContext = new AudioContextClass();
-	const footstepsAudio = new Audio(FOOTSTEP_AUDIO_PATH);
-	footstepsAudio.preload = "auto";
-	footstepsAudio.loop = false;
-	footstepsAudio.volume = 1;
-
-	const source = audioContext.createMediaElementSource(footstepsAudio);
-	const gainNode = audioContext.createGain();
-	gainNode.gain.value = 0.9;
-
-	if (typeof audioContext.createStereoPanner === "function") {
-		const stereoPanner = audioContext.createStereoPanner();
-		stereoPanner.pan.value = side === "left" ? -1 : 1;
-		source.connect(stereoPanner);
-		stereoPanner.connect(gainNode);
-	} else {
-		source.connect(gainNode);
-	}
-
-	gainNode.connect(audioContext.destination);
-
-	const cleanup = () => {
-		source.disconnect();
-		gainNode.disconnect();
-		audioContext.close().catch(() => {});
-	};
-
-	footstepsAudio.addEventListener("ended", cleanup, { once: true });
-	footstepsAudio.addEventListener("error", cleanup, { once: true });
-
-	audioContext.resume().catch(() => {});
-	footstepsAudio.play().catch(cleanup);
+	const AudioCtx = window.AudioContext || window.webkitAudioContext;
+	if (!AudioCtx) return;
+	const ctx = new AudioCtx(), audio = new Audio(FOOTSTEP_PATH);
+	audio.preload = audio.loop = false; audio.volume = 1;
+	const src = ctx.createMediaElementSource(audio), gain = ctx.createGain();
+	gain.gain.value = 0.9;
+	if (ctx.createStereoPanner) {
+		const pan = ctx.createStereoPanner();
+		pan.pan.value = side === "left" ? -1 : 1;
+		src.connect(pan).connect(gain);
+	} else src.connect(gain);
+	gain.connect(ctx.destination);
+	const clean = () => (src.disconnect(), gain.disconnect(), ctx.close().catch(() => {}));
+	audio.addEventListener("ended", clean, { once: true });
+	audio.addEventListener("error", clean, { once: true });
+	ctx.resume().catch(() => {}); audio.play().catch(clean);
 }
 
 export function createNightLabel(night) {
-	const nightLabel = document.createElement("div");
-	nightLabel.id = "night-indicator";
-	nightLabel.textContent = `Nuit ${night}`;
-
-	Object.assign(nightLabel.style, {
-		position: "absolute",
-		top: "16px",
-		right: "24px",
-		color: "#fff",
-		fontSize: "28px",
-		fontWeight: "700",
-		textShadow: "0 0 12px rgba(0, 0, 0, 0.9)",
-		zIndex: "6"
+	const label = document.createElement("div");
+	label.id = "night-indicator";
+	label.textContent = `Nuit ${night}`;
+	Object.assign(label.style, {
+		position: "absolute", top: "16px", right: "24px", color: "#fff", fontSize: "28px",
+		fontWeight: "700", textShadow: "0 0 12px rgba(0, 0, 0, 0.9)", zIndex: "6"
 	});
-
-	return nightLabel;
+	return label;
 }
 
-export function startSpringtrapBehavior(menuStage, night, doorControls, lightControls, onGameOver) {
-	const chance = getEnemyMoveChance(night);
-	const attackTimeoutMs = getEnemyAttackTimeout(night);
-	const springtrap = document.createElement("img");
-	springtrap.src = "Assets/images/Springtrap.png";
-	springtrap.alt = "Springtrap";
-	springtrap.draggable = false;
-
-	Object.assign(springtrap.style, {
-		position: "absolute",
-		bottom: "18%",
-		width: "24%",
-		maxWidth: "260px",
-		height: "auto",
-		zIndex: "5",
-		opacity: "0",
-		pointerEvents: "none",
-		transition: "opacity 150ms ease",
-		display: "block"
+export function startSpringtrapBehavior(stage, night, doors, lights, onGameOver) {
+	const img = document.createElement("img");
+	img.src = "Assets/images/Springtrap.png"; img.alt = "Springtrap"; img.draggable = false;
+	Object.assign(img.style, {
+		position: "absolute", bottom: "18%", width: "24%", maxWidth: "260px", height: "auto",
+		zIndex: "5", opacity: "0", pointerEvents: "none", transition: "opacity 150ms ease"
 	});
+	stage.appendChild(img);
 
-	menuStage.appendChild(springtrap);
-
-	let activeAttackTimeoutId = null;
-	let activeAttackSide = null;
-	let hasTriggeredGameOver = false;
-	let unsubscribeFromLightChanges = null;
-
-	const hideEnemy = () => {
-		springtrap.style.opacity = "0";
+	let atkId = null, atkSide = null, ended = false, unsub = null;
+	const hide = () => (img.style.opacity = "0");
+	const position = (s) => {
+		img.style.left = s === "left" ? "10%" : "auto";
+		img.style.right = s === "left" ? "auto" : "10%";
+		img.style.transform = s === "left" ? "scaleX(1)" : "scaleX(-1)";
 	};
-
-	const positionEnemy = (side) => {
-		if (side === "left") {
-			springtrap.style.left = "10%";
-			springtrap.style.right = "auto";
-			springtrap.style.transform = "scaleX(1)";
-			return;
-		}
-
-		springtrap.style.right = "10%";
-		springtrap.style.left = "auto";
-		springtrap.style.transform = "scaleX(-1)";
+	const show = () => {
+		if (!atkSide || !lights?.isLightOn?.(atkSide)) { hide(); return; }
+		position(atkSide); img.style.opacity = "1";
 	};
-
-	const updateEnemyVisibility = () => {
-		if (!activeAttackSide || !lightControls || typeof lightControls.isLightOn !== "function") {
-			hideEnemy();
-			return;
-		}
-
-		if (lightControls.isLightOn(activeAttackSide)) {
-			positionEnemy(activeAttackSide);
-			springtrap.style.opacity = "1";
-			return;
-		}
-
-		hideEnemy();
+	const clear = () => (clearTimeout(atkId), atkId = null, atkSide = null, hide());
+	const gameOver = () => {
+		if (ended) return; ended = true; clear(); onGameOver?.();
 	};
-
-	const clearActiveAttack = () => {
-		if (activeAttackTimeoutId !== null) {
-			clearTimeout(activeAttackTimeoutId);
-			activeAttackTimeoutId = null;
-		}
-
-		activeAttackSide = null;
-		hideEnemy();
+	const attack = (s) => {
+		if (atkId) return;
+		atkSide = s; playDirectionalFootsteps(s); show();
+		atkId = setTimeout(() => {
+			atkId = null;
+			if (!doors?.isDoorClosed?.(atkSide)) { gameOver(); return; }
+			atkSide = null; hide();
+		}, getTimeout(night));
 	};
-
-	const triggerGameOver = () => {
-		if (hasTriggeredGameOver) {
-			return;
-		}
-
-		hasTriggeredGameOver = true;
-		clearActiveAttack();
-
-		if (typeof onGameOver === "function") {
-			onGameOver();
-		}
-	};
-
-	const startAttack = (side) => {
-		if (activeAttackTimeoutId !== null) {
-			return;
-		}
-
-		activeAttackSide = side;
-		playDirectionalFootsteps(side);
-		updateEnemyVisibility();
-
-		activeAttackTimeoutId = setTimeout(() => {
-			activeAttackTimeoutId = null;
-
-			if (!doorControls || typeof doorControls.isDoorClosed !== "function" || !doorControls.isDoorClosed(activeAttackSide)) {
-				triggerGameOver();
-				return;
-			}
-
-			activeAttackSide = null;
-			hideEnemy();
-		}, attackTimeoutMs);
-	};
-
-	const moveEnemyToDoor = () => {
-		if (hasTriggeredGameOver || activeAttackTimeoutId !== null || Math.random() >= chance) {
-			return;
-		}
-
-		const goLeft = Math.random() < 0.5;
-		if (goLeft) {
-			startAttack("left");
-		} else {
-			startAttack("right");
-		}
-	};
-
-	const intervalId = setInterval(moveEnemyToDoor, 2800);
-
-	if (lightControls && typeof lightControls.onChange === "function") {
-		unsubscribeFromLightChanges = lightControls.onChange(() => {
-			updateEnemyVisibility();
-		});
-	}
-
-	return () => {
-		clearInterval(intervalId);
-		clearActiveAttack();
-		if (typeof unsubscribeFromLightChanges === "function") {
-			unsubscribeFromLightChanges();
-		}
-		springtrap.remove();
-	};
+	const iId = setInterval(() => {
+		if (ended || atkId || Math.random() >= getChance(night)) return;
+		attack(Math.random() < 0.5 ? "left" : "right");
+	}, 2800);
+	if (lights?.onChange) unsub = lights.onChange(() => show());
+	return () => (clearInterval(iId), clear(), unsub?.(), img.remove());
 }

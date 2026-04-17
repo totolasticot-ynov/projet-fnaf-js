@@ -77,11 +77,19 @@ export function initDoorControls(menuStage) {
 	};
 
 	leftButton.addEventListener("click", () => {
+		const willBeClosed = !state.left;
+		if (willBeClosed && state.right) {
+			return;
+		}
 		state.left = !state.left;
 		update();
 	});
 
 	rightButton.addEventListener("click", () => {
+		const willBeClosed = !state.right;
+		if (willBeClosed && state.left) {
+			return;
+		}
 		state.right = !state.right;
 		update();
 	});
