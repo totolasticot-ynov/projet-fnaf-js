@@ -1,6 +1,7 @@
 import { ShowWinScreen, startGameTimer, stopGameTimer } from "./time.js";
 import { playGameOverSequence } from "./gameover.js";
 import { createNightLabel, readNight, startSpringtrapBehavior } from "./enemy.js";
+import { createDangerDisplay } from "./danger.js";
 import { initDoorControls } from "./doors.js";
 import { initLightControls } from "./light.js";
 import {
@@ -42,16 +43,7 @@ window.addEventListener("DOMContentLoaded", () => {
         menuStage.style.alignItems = "center";
         menuStage.style.backgroundColor = "#000";
 
-        const officeImage = document.createElement("img");
-        officeImage.src = "Assets/images/office.png";
-        officeImage.alt = "Office";
-        officeImage.style.width = "100%";
-        officeImage.style.height = "100%";
-        officeImage.style.objectFit = "contain";
-        officeImage.style.cursor = "default";
-        officeImage.draggable = false;
-
-        menuStage.appendChild(officeImage);
+        const dangerDisplay = createDangerDisplay(menuStage);
         menuStage.appendChild(createNightLabel(currentNight));
 
         const doorControls = initDoorControls(menuStage);
@@ -65,13 +57,14 @@ window.addEventListener("DOMContentLoaded", () => {
 
             hasEnded = true;
             stopEnemyBehavior();
+            dangerDisplay.destroy();
             doorControls.destroy();
             lightControls.destroy();
             stopGameTimer();
             await playGameOverSequence(menuStage, readVolume());
         };
 
-        const stopEnemyBehavior = startSpringtrapBehavior(menuStage, currentNight, doorControls, lightControls, triggerGameOver);
+        const stopEnemyBehavior = startSpringtrapBehavior(currentNight, doorControls, lightControls, dangerDisplay, triggerGameOver);
 
         const handleWin = () => {
             if (hasEnded) {
@@ -80,6 +73,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
             hasEnded = true;
             stopEnemyBehavior();
+            dangerDisplay.destroy();
             doorControls.destroy();
             lightControls.destroy();
             ShowWinScreen(menuStage);

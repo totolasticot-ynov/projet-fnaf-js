@@ -40,43 +40,36 @@ export function createNightLabel(night) {
 	return label;
 }
 
-export function startSpringtrapBehavior(stage, night, doors, lights, onGameOver) {
-	const img = document.createElement("img");
-	img.src = "Assets/images/Springtrap.png"; img.alt = "Springtrap"; img.draggable = false;
-	Object.assign(img.style, {
-		position: "absolute", bottom: "18%", width: "24%", maxWidth: "260px", height: "auto",
-		zIndex: "5", opacity: "0", pointerEvents: "none", transition: "opacity 150ms ease"
-	});
-	stage.appendChild(img);
 
+export function startSpringtrapBehavior(night, doors, lights, dangerDisplay, onGameOver) {
 	let atkId = null, atkSide = null, ended = false, unsub = null;
-	const hide = () => (img.style.opacity = "0");
-	const position = (s) => {
-		img.style.left = s === "left" ? "10%" : "auto";
-		img.style.right = s === "left" ? "auto" : "10%";
-		img.style.transform = s === "left" ? "scaleX(1)" : "scaleX(-1)";
+	const showOffice = () => dangerDisplay?.setOffice?.();
+	const showSpringtrap = () => {
+		if (!atkSide || !lights?.isLightOn?.(atkSide)) {
+			showOffice();
+			return;
+		}
+
+		dangerDisplay?.setSpringtrap?.(atkSide);
 	};
-	const show = () => {
-		if (!atkSide || !lights?.isLightOn?.(atkSide)) { hide(); return; }
-		position(atkSide); img.style.opacity = "1";
-	};
-	const clear = () => (clearTimeout(atkId), atkId = null, atkSide = null, hide());
+	const clear = () => (clearTimeout(atkId), atkId = null, atkSide = null, showOffice());
 	const gameOver = () => {
 		if (ended) return; ended = true; clear(); onGameOver?.();
 	};
 	const attack = (s) => {
 		if (atkId) return;
-		atkSide = s; playDirectionalFootsteps(s); show();
+		atkSide = s; playDirectionalFootsteps(s); showSpringtrap();
 		atkId = setTimeout(() => {
 			atkId = null;
 			if (!doors?.isDoorClosed?.(atkSide)) { gameOver(); return; }
-			atkSide = null; hide();
+			atkSide = null; showOffice();
 		}, getTimeout(night));
 	};
 	const iId = setInterval(() => {
 		if (ended || atkId || Math.random() >= getChance(night)) return;
 		attack(Math.random() < 0.5 ? "left" : "right");
 	}, 2800);
-	if (lights?.onChange) unsub = lights.onChange(() => show());
-	return () => (clearInterval(iId), clear(), unsub?.(), img.remove());
+	if (lights?.onChange) unsub = lights.onChange(() => showSpringtrap());
+	showOffice();
+	return () => (clearInterval(iId), clear(), unsub?.());
 }
