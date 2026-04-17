@@ -3,10 +3,18 @@ import { playGameOverSequence } from "./gameover.js";
 import { createNightLabel, readNight, startSpringtrapBehavior } from "./enemy.js";
 import { initDoorControls } from "./doors.js";
 import { initLightControls } from "./light.js";
+import {
+    INTRO_NIGHT_1_PATH,
+    INTRO_NIGHT_2_PATH,
+    NIGHT_KEY,
+    consumeNight2ButtonFlag,
+    prepareNightForMenuLoad
+} from "./nights.js";
 
 window.addEventListener("DOMContentLoaded", () => {
     const VOLUME_KEY = "gameVolume";
     const btnPlay = document.getElementById("Jouer");
+    const menuButtons = document.getElementById("menu-buttons");
     const btnOptions = document.getElementById("Options");
     const optionsModal = document.getElementById("options-modal");
     const closeOptionsBtn = document.getElementById("close-options");
@@ -22,6 +30,8 @@ window.addEventListener("DOMContentLoaded", () => {
         const stored = Number(localStorage.getItem(VOLUME_KEY));
         return Number.isNaN(stored) ? 0.5 : clampVolume(stored);
     };
+
+    const shouldShowNight2Button = prepareNightForMenuLoad();
 
     const launchGameScene = (menuStage) => {
         const currentNight = readNight();
@@ -95,7 +105,7 @@ window.addEventListener("DOMContentLoaded", () => {
         startGameTimer(menuStage, 6 * 60, handleWin);
     };
 
-    const playGameIntroThenLaunch = async (menuStage) => {
+    const playNightIntroThenLaunch = async (menuStage, introPath, forcedNight = null) => {
         stopGameTimer();
         menuStage.innerHTML = "";
         menuStage.style.display = "flex";
@@ -103,8 +113,12 @@ window.addEventListener("DOMContentLoaded", () => {
         menuStage.style.alignItems = "center";
         menuStage.style.backgroundColor = "#000";
 
+        if (typeof forcedNight === "number") {
+            localStorage.setItem(NIGHT_KEY, String(forcedNight));
+        }
+
         const introVideo = document.createElement("video");
-        introVideo.src = "Assets/video/Intro-Fnaf.mp4";
+        introVideo.src = introPath;
         introVideo.autoplay = true;
         introVideo.controls = false;
         introVideo.loop = false;
@@ -206,7 +220,27 @@ window.addEventListener("DOMContentLoaded", () => {
             const menuStage = document.getElementById("menu-stage");
             if (!menuStage) return;
 
-            await playGameIntroThenLaunch(menuStage);
+            await playNightIntroThenLaunch(menuStage, INTRO_NIGHT_1_PATH, 1);
         });
+    }
+
+    if (shouldShowNight2Button && menuButtons) {
+        const btnNight2 = document.createElement("button");
+        btnNight2.id = "Night2";
+        btnNight2.textContent = "Continuer";
+
+        btnNight2.addEventListener("click", async () => {
+            const menuStage = document.getElementById("menu-stage");
+            if (!menuStage) return;
+
+            consumeNight2ButtonFlag();
+            await playNightIntroThenLaunch(menuStage, INTRO_NIGHT_2_PATH, 2);
+        });
+
+        if (btnOptions && btnOptions.parentElement === menuButtons) {
+            menuButtons.insertBefore(btnNight2, btnOptions);
+        } else {
+            menuButtons.appendChild(btnNight2);
+        }
     }
 });

@@ -37,17 +37,6 @@ class Game {
     }
 
     init() {
-        const container = document.getElementById('game-container');
-        if (!container) {
-            console.error(' Conteneur introuvable');
-            return Promise.resolve();
-        }
-
-        this.stage = document.getElementById('menu-stage');
-        if (!this.stage) {
-            console.error(' Zone de menu introuvable');
-            return Promise.resolve();
-        }
 
         return this.playIntroVideo().then(() => {
             if (typeof this.updateStageLayout === 'function') {

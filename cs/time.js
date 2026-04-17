@@ -1,11 +1,20 @@
-import { playEndVideoAsync } from "./home.js";
+import { playEndSequence } from "./end.js";
+import { setNightAfterWin } from "./nights.js";
 
 const DEFAULT_TIMER_SECONDS = 6 * 60;
-const NIGHT_KEY = "currentNight";
-const MAX_NIGHT = 3;
+const VOLUME_KEY = "gameVolume";
 
 let activeIntervalId = null;
 let activeTimerElement = null;
+
+function readSavedVolume() {
+	const storedVolume = Number(localStorage.getItem(VOLUME_KEY));
+	if (Number.isNaN(storedVolume)) {
+		return 0.5;
+	}
+
+	return Math.max(0, Math.min(1, storedVolume));
+}
 
 function formatNightHour(remainingSeconds, totalDurationSeconds) {
 	const safeRemaining = Math.max(0, remainingSeconds);
@@ -36,10 +45,7 @@ export function stopGameTimer() {
 export async function ShowWinScreen(targetElement) {
 	stopGameTimer();
 
-	const currentNight = Number(localStorage.getItem(NIGHT_KEY));
-	const safeNight = Number.isNaN(currentNight) ? 1 : Math.max(1, Math.min(MAX_NIGHT, Math.floor(currentNight)));
-	const nextNight = Math.min(MAX_NIGHT, safeNight + 1);
-	localStorage.setItem(NIGHT_KEY, String(nextNight));
+	setNightAfterWin();
 
 	if (targetElement) {
 		const skipButton = targetElement.querySelector("#skip-timer-btn");
@@ -48,7 +54,7 @@ export async function ShowWinScreen(targetElement) {
 		}
 	}
 
-	await playEndVideoAsync(() => {
+	await playEndSequence(targetElement, readSavedVolume(), null, () => {
 		window.location.reload();
 	});
 }
