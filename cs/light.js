@@ -29,6 +29,7 @@ function createControlButton(label, side, offsetPx) {
 export function initLightControls(menuStage) {
 	const leftCorridorLight = document.createElement("div");
 	const rightCorridorLight = document.createElement("div");
+	const listeners = new Set();
 
 	Object.assign(leftCorridorLight.style, {
 		position: "absolute",
@@ -79,6 +80,10 @@ export function initLightControls(menuStage) {
 		rightButton.style.boxShadow = state.right ? "inset 0 1px 0 rgba(255,255,255,0.12), 0 0 14px rgba(132, 255, 111, 0.75)" : "inset 0 1px 0 rgba(255,255,255,0.12), 0 0 8px rgba(0,0,0,0.55)";
 		leftButton.style.background = state.left ? "linear-gradient(180deg, #24442a 0%, #142717 100%)" : "linear-gradient(180deg, #2b3136 0%, #171b1e 100%)";
 		rightButton.style.background = state.right ? "linear-gradient(180deg, #24442a 0%, #142717 100%)" : "linear-gradient(180deg, #2b3136 0%, #171b1e 100%)";
+
+		listeners.forEach((listener) => {
+			listener({ ...state });
+		});
 	};
 
 	leftButton.addEventListener("click", () => {
@@ -97,11 +102,24 @@ export function initLightControls(menuStage) {
 		isLightOn(side) {
 			return side === "left" ? state.left : state.right;
 		},
+		onChange(listener) {
+			if (typeof listener !== "function") {
+				return () => {};
+			}
+
+			listeners.add(listener);
+			listener({ ...state });
+
+			return () => {
+				listeners.delete(listener);
+			};
+		},
 		destroy() {
 			leftButton.remove();
 			rightButton.remove();
 			leftCorridorLight.remove();
 			rightCorridorLight.remove();
+			listeners.clear();
 		}
 	};
 }

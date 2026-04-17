@@ -1,5 +1,4 @@
 import { ShowWinScreen, startGameTimer, stopGameTimer } from "./time.js";
-import { playJumpscareVideoAsync } from "./home.js";
 import { playGameOverSequence } from "./gameover.js";
 import { createNightLabel, readNight, startSpringtrapBehavior } from "./enemy.js";
 import { initDoorControls } from "./doors.js";
@@ -49,7 +48,7 @@ window.addEventListener("DOMContentLoaded", () => {
         const lightControls = initLightControls(menuStage);
 
         let hasEnded = false;
-        const stopEnemyBehavior = startSpringtrapBehavior(menuStage, currentNight, doorControls, async () => {
+        const triggerGameOver = async () => {
             if (hasEnded) {
                 return;
             }
@@ -60,7 +59,9 @@ window.addEventListener("DOMContentLoaded", () => {
             lightControls.destroy();
             stopGameTimer();
             await playGameOverSequence(menuStage, readVolume());
-        });
+        };
+
+        const stopEnemyBehavior = startSpringtrapBehavior(menuStage, currentNight, doorControls, lightControls, triggerGameOver);
 
         const handleWin = () => {
             if (hasEnded) {
@@ -87,7 +88,7 @@ window.addEventListener("DOMContentLoaded", () => {
         jumpscareButton.id = "jumpscare-btn";
         jumpscareButton.textContent = "Jumpscare";
         jumpscareButton.addEventListener("click", async () => {
-            await playJumpscareVideoAsync();
+            await triggerGameOver();
         });
 
         menuStage.appendChild(jumpscareButton);

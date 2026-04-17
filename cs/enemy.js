@@ -83,12 +83,65 @@ export function createNightLabel(night) {
 	return nightLabel;
 }
 
-export function startSpringtrapBehavior(menuStage, night, doorControls, onGameOver) {
+export function startSpringtrapBehavior(menuStage, night, doorControls, lightControls, onGameOver) {
 	const chance = getEnemyMoveChance(night);
 	const attackTimeoutMs = getEnemyAttackTimeout(night);
+	const springtrap = document.createElement("img");
+	springtrap.src = "Assets/images/Springtrap.png";
+	springtrap.alt = "Springtrap";
+	springtrap.draggable = false;
+
+	Object.assign(springtrap.style, {
+		position: "absolute",
+		bottom: "18%",
+		width: "24%",
+		maxWidth: "260px",
+		height: "auto",
+		zIndex: "5",
+		opacity: "0",
+		pointerEvents: "none",
+		transition: "opacity 150ms ease",
+		display: "block"
+	});
+
+	menuStage.appendChild(springtrap);
+
 	let activeAttackTimeoutId = null;
 	let activeAttackSide = null;
 	let hasTriggeredGameOver = false;
+	let unsubscribeFromLightChanges = null;
+
+	const hideEnemy = () => {
+		springtrap.style.opacity = "0";
+	};
+
+	const positionEnemy = (side) => {
+		if (side === "left") {
+			springtrap.style.left = "10%";
+			springtrap.style.right = "auto";
+			springtrap.style.transform = "scaleX(1)";
+			return;
+		}
+
+		springtrap.style.right = "10%";
+		springtrap.style.left = "auto";
+		springtrap.style.transform = "scaleX(-1)";
+	};
+
+	const updateEnemyVisibility = () => {
+		if (!activeAttackSide || !lightControls || typeof lightControls.isLightOn !== "function") {
+			hideEnemy();
+			return;
+		}
+
+		if (lightControls.isLightOn(activeAttackSide)) {
+			positionEnemy(activeAttackSide);
+			springtrap.style.opacity = "1";
+			return;
+		}
+
+		hideEnemy();
+	};
 
 	const clearActiveAttack = () => {
 		if (activeAttackTimeoutId !== null) {
@@ -97,6 +150,7 @@ export function startSpringtrapBehavior(menuStage, night, doorControls, onGameOv
 		}
 
 		activeAttackSide = null;
+		hideEnemy();
 	};
 
 	const triggerGameOver = () => {
@@ -119,6 +173,7 @@ export function startSpringtrapBehavior(menuStage, night, doorControls, onGameOv
 
 		activeAttackSide = side;
 		playDirectionalFootsteps(side);
+		updateEnemyVisibility();
 
 		activeAttackTimeoutId = setTimeout(() => {
 			activeAttackTimeoutId = null;
@@ -129,6 +184,7 @@ export function startSpringtrapBehavior(menuStage, night, doorControls, onGameOv
 			}
 
 			activeAttackSide = null;
+			hideEnemy();
 		}, attackTimeoutMs);
 	};
 
@@ -147,8 +203,18 @@ export function startSpringtrapBehavior(menuStage, night, doorControls, onGameOv
 
 	const intervalId = setInterval(moveEnemyToDoor, 2800);
 
+	if (lightControls && typeof lightControls.onChange === "function") {
+		unsubscribeFromLightChanges = lightControls.onChange(() => {
+			updateEnemyVisibility();
+		});
+	}
+
 	return () => {
 		clearInterval(intervalId);
 		clearActiveAttack();
+		if (typeof unsubscribeFromLightChanges === "function") {
+			unsubscribeFromLightChanges();
+		}
+		springtrap.remove();
 	};
 }
