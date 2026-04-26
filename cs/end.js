@@ -1,13 +1,13 @@
 import { VideoPlayer } from './VideoPlayer.js';
 
-export async function playEndSequence(stage, volume, onVideoReady) {
+export async function playEndSequence(stage, volume, onVideoReady, onEnded) {
 	if (!stage) {
 		return null;
 	}
 
 	stage.innerHTML = '';
 
-	const player = new VideoPlayer('Assets/Win-Fnaf.mp4');
+	const player = new VideoPlayer('Assets/video/Win-Fnaf.mp4');
 	const videoElement = player.createVideoElement();
 	player.setLoop(false);
 	player.setVolume(volume);
@@ -17,6 +17,12 @@ export async function playEndSequence(stage, volume, onVideoReady) {
 			onVideoReady(videoElement.videoWidth, videoElement.videoHeight);
 		}
 	});
+
+	if (typeof onEnded === 'function') {
+		videoElement.addEventListener('ended', () => {
+			onEnded();
+		}, { once: true });
+	}
 
 	stage.prepend(videoElement);
 	await player.play();

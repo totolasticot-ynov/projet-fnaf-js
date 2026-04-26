@@ -1,5 +1,9 @@
 import { ShowWinScreen, startGameTimer, stopGameTimer } from "./time.js";
 import { playJumpscareVideoAsync } from "./home.js";
+import { playGameOverSequence } from "./gameover.js";
+import { createNightLabel, readNight, startSpringtrapBehavior } from "./enemy.js";
+import { initDoorControls } from "./doors.js";
+import { initLightControls } from "./light.js";
 
 window.addEventListener("DOMContentLoaded", () => {
     const VOLUME_KEY = "gameVolume";
@@ -21,6 +25,7 @@ window.addEventListener("DOMContentLoaded", () => {
     };
 
     const launchGameScene = (menuStage) => {
+        const currentNight = readNight();
         stopGameTimer();
         menuStage.innerHTML = "";
         menuStage.style.display = "flex";
@@ -29,7 +34,7 @@ window.addEventListener("DOMContentLoaded", () => {
         menuStage.style.backgroundColor = "#000";
 
         const officeImage = document.createElement("img");
-        officeImage.src = "Assets/office.png";
+        officeImage.src = "Assets/images/office.png";
         officeImage.alt = "Office";
         officeImage.style.width = "100%";
         officeImage.style.height = "100%";
@@ -38,12 +43,42 @@ window.addEventListener("DOMContentLoaded", () => {
         officeImage.draggable = false;
 
         menuStage.appendChild(officeImage);
+        menuStage.appendChild(createNightLabel(currentNight));
+
+        const doorControls = initDoorControls(menuStage);
+        const lightControls = initLightControls(menuStage);
+
+        let hasEnded = false;
+        const stopEnemyBehavior = startSpringtrapBehavior(menuStage, currentNight, doorControls, async () => {
+            if (hasEnded) {
+                return;
+            }
+
+            hasEnded = true;
+            stopEnemyBehavior();
+            doorControls.destroy();
+            lightControls.destroy();
+            stopGameTimer();
+            await playGameOverSequence(menuStage, readVolume());
+        });
+
+        const handleWin = () => {
+            if (hasEnded) {
+                return;
+            }
+
+            hasEnded = true;
+            stopEnemyBehavior();
+            doorControls.destroy();
+            lightControls.destroy();
+            ShowWinScreen(menuStage);
+        };
 
         const skipTimerButton = document.createElement("button");
         skipTimerButton.id = "skip-timer-btn";
         skipTimerButton.textContent = "Finir timer";
         skipTimerButton.addEventListener("click", () => {
-            ShowWinScreen(menuStage);
+            handleWin();
         });
 
         menuStage.appendChild(skipTimerButton);
@@ -56,7 +91,7 @@ window.addEventListener("DOMContentLoaded", () => {
         });
 
         menuStage.appendChild(jumpscareButton);
-        startGameTimer(menuStage, 6 * 60, () => ShowWinScreen(menuStage));
+        startGameTimer(menuStage, 6 * 60, handleWin);
     };
 
     const playGameIntroThenLaunch = async (menuStage) => {
@@ -68,7 +103,7 @@ window.addEventListener("DOMContentLoaded", () => {
         menuStage.style.backgroundColor = "#000";
 
         const introVideo = document.createElement("video");
-        introVideo.src = "Assets/Intro-Fnaf.mp4";
+        introVideo.src = "Assets/video/Intro-Fnaf.mp4";
         introVideo.autoplay = true;
         introVideo.controls = false;
         introVideo.loop = false;
