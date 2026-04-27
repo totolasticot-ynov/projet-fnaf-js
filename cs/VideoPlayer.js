@@ -28,6 +28,7 @@ export class VideoPlayer {
         return this.videoElement;
     }
 
+    // Tente de lancer la vidéo et gère l'échec d'autoplay si nécessaire.
     async play() {
         try {
             await this.videoElement.play();
@@ -35,24 +36,28 @@ export class VideoPlayer {
         } catch (error) {
             this.isPlaying = false;
             
+            // Si l'autoplay est bloqué, retenter la lecture après un clic de l'utilisateur.
             document.addEventListener('click', async () => {
                 await this.videoElement.play();
             }, { once: true });
         }
     }
 
+    // Active ou désactive la boucle de lecture.
     setLoop(shouldLoop = true) {
         if (this.videoElement) {
             this.videoElement.loop = shouldLoop;
         }
     }
 
+    // Définit le volume de la vidéo entre 0 et 1.
     setVolume(volume) {
         if (this.videoElement) {
             this.videoElement.volume = Math.max(0, Math.min(1, volume));
         }
     }
 
+    // Ajoute un écouteur sur l'élément vidéo.
     on(eventName, callback) {
         if (this.videoElement) {
             this.videoElement.addEventListener(eventName, callback);
