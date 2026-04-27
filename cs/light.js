@@ -74,6 +74,7 @@ export function initLightControls(menuStage) {
 		left: false,
 		right: false
 	};
+	let disabled = false;
 
 	// Met à jour l'apparence des lumières et des boutons.
 	const update = () => {
@@ -85,6 +86,13 @@ export function initLightControls(menuStage) {
 		rightButton.style.boxShadow = state.right ? "inset 0 1px 0 rgba(255,255,255,0.12), 0 0 14px rgba(132, 255, 111, 0.75)" : "inset 0 1px 0 rgba(255,255,255,0.12), 0 0 8px rgba(0,0,0,0.55)";
 		leftButton.style.background = state.left ? "linear-gradient(180deg, #24442a 0%, #142717 100%)" : "linear-gradient(180deg, #2b3136 0%, #171b1e 100%)";
 		rightButton.style.background = state.right ? "linear-gradient(180deg, #24442a 0%, #142717 100%)" : "linear-gradient(180deg, #2b3136 0%, #171b1e 100%)";
+		if (disabled) {
+			leftButton.style.opacity = "0.55";
+			rightButton.style.opacity = "0.55";
+		} else {
+			leftButton.style.opacity = "1";
+			rightButton.style.opacity = "1";
+		}
 
 		listeners.forEach((listener) => {
 			listener({ ...state });
@@ -92,6 +100,10 @@ export function initLightControls(menuStage) {
 	};
 
 	leftButton.addEventListener("click", () => {
+		if (disabled) {
+			return;
+		}
+
 		const willBeTurnedOn = !state.left;
 		if (willBeTurnedOn && state.right) return; // empêcher deux lumières allumées en même temps
 		state.left = !state.left;
@@ -99,6 +111,10 @@ export function initLightControls(menuStage) {
 	});
 
 	rightButton.addEventListener("click", () => {
+		if (disabled) {
+			return;
+		}
+
 		const willBeTurnedOn = !state.right;
 		if (willBeTurnedOn && state.left) return; // empêcher deux lumières allumées en même temps
 		state.right = !state.right;
@@ -111,6 +127,21 @@ export function initLightControls(menuStage) {
 		// Vérifie si une lumière est allumée.
 		isLightOn(side) {
 			return side === "left" ? state.left : state.right;
+		},
+		// Éteint toutes les lumières immédiatement.
+		turnOffAll() {
+			state.left = false;
+			state.right = false;
+			update();
+		},
+		// Permet d'activer ou désactiver l'utilisation des lumières.
+		setDisabled(value) {
+			disabled = Boolean(value);
+			leftButton.disabled = disabled;
+			rightButton.disabled = disabled;
+			leftButton.style.cursor = disabled ? "not-allowed" : "pointer";
+			rightButton.style.cursor = disabled ? "not-allowed" : "pointer";
+			update();
 		},
 		// Permet à d'autres composants de recevoir les mises à jour d'état.
 		onChange(listener) {
