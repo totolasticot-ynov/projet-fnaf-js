@@ -54,5 +54,6 @@ export function setNightAfterWin() {
 		localStorage.removeItem(NEXT_NIGHT_READY_KEY);
 	}
 
+	// Retourne les informations de progression de la nuit pour faciliter le débogage ou l'affichage.
 	return { currentNight, nextNight, shouldShowNight2Button };
 }
