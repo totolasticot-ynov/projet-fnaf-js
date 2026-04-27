@@ -82,10 +82,11 @@ window.addEventListener("DOMContentLoaded", () => {
         const doorUnsubscribe = doorControls.onChange(updateBatteryUsage);
         const lightUnsubscribe = lightControls.onChange(updateBatteryUsage);
         updateBatteryUsage();
-        batteryDisplay.onEmpty(triggerGameOver);
-
-        const stopEnemyBehavior = startSpringtrapBehavior(currentNight, doorControls, lightControls, dangerDisplay, triggerGameOver);
-
+		batteryDisplay.onEmpty(() => {
+			doorControls.setDisabled(true);
+			lightControls.setDisabled(true);
+			triggerGameOver();
+		});
         const handleWin = () => {
             if (hasEnded) {
                 return;

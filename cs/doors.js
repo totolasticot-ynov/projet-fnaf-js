@@ -67,6 +67,7 @@ export function initDoorControls(menuStage) {
 		right: false
 	};
 	const listeners = new Set();
+	let disabled = false;
 
 	// Met à jour l'apparence des panneaux et des boutons selon l'état.
 	const update = () => {
@@ -80,6 +81,13 @@ export function initDoorControls(menuStage) {
 		rightButton.style.boxShadow = state.right ? "inset 0 1px 0 rgba(255,255,255,0.1), 0 0 14px rgba(255, 68, 68, 0.72)" : "inset 0 1px 0 rgba(255,255,255,0.12), 0 0 8px rgba(0,0,0,0.55)";
 		leftButton.style.background = state.left ? "linear-gradient(180deg, #4d1f1f 0%, #2f0f0f 100%)" : "linear-gradient(180deg, #2b3136 0%, #171b1e 100%)";
 		rightButton.style.background = state.right ? "linear-gradient(180deg, #4d1f1f 0%, #2f0f0f 100%)" : "linear-gradient(180deg, #2b3136 0%, #171b1e 100%)";
+		if (disabled) {
+			leftButton.style.opacity = "0.55";
+			rightButton.style.opacity = "0.55";
+		} else {
+			leftButton.style.opacity = "1";
+			rightButton.style.opacity = "1";
+		}
 		listeners.forEach((listener) => {
 			listener({ ...state });
 		});
@@ -87,6 +95,10 @@ export function initDoorControls(menuStage) {
 
 	// Clic sur le bouton de la porte gauche.
 	leftButton.addEventListener("click", () => {
+		if (disabled) {
+			return;
+		}
+
 		const willBeClosed = !state.left;
 		if (willBeClosed && state.right) {
 			return; // empêcher de fermer les deux portes en même temps
@@ -97,6 +109,10 @@ export function initDoorControls(menuStage) {
 
 	// Clic sur le bouton de la porte droite.
 	rightButton.addEventListener("click", () => {
+		if (disabled) {
+			return;
+		}
+
 		const willBeClosed = !state.right;
 		if (willBeClosed && state.left) {
 			return; // empêcher de fermer les deux portes en même temps
@@ -111,6 +127,15 @@ export function initDoorControls(menuStage) {
 		// Indique si une porte est fermée.
 		isDoorClosed(side) {
 			return side === "left" ? state.left : state.right;
+		},
+		// Permet d'activer ou désactiver l'utilisation des portes.
+		setDisabled(value) {
+			disabled = Boolean(value);
+			leftButton.disabled = disabled;
+			rightButton.disabled = disabled;
+			leftButton.style.cursor = disabled ? "not-allowed" : "pointer";
+			rightButton.style.cursor = disabled ? "not-allowed" : "pointer";
+			update();
 		},
 		// Permet d'écouter les changements d'état des portes.
 		onChange(listener) {
