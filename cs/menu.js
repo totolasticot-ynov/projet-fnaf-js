@@ -13,8 +13,118 @@ import {
     prepareNightForMenuLoad
 } from "./nights.js";
 
+const VOLUME_KEY = "gameVolume";
+const clampVolume = (value) => Math.max(0, Math.min(1, value));
+const readVolume = () => {
+    const stored = Number(localStorage.getItem(VOLUME_KEY));
+    return Number.isNaN(stored) ? 0.5 : clampVolume(stored);
+};
+const setMenuStage = (menuStage) => {
+    menuStage.innerHTML = "";
+    Object.assign(menuStage.style, {
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#000"
+    });
+};
+const createButton = (id, label, handler) => {
+    const button = document.createElement("button");
+    button.id = id;
+    button.textContent = label;
+    button.addEventListener("click", handler);
+    return button;
+};
+const toggleModal = (modal, visible) => {
+    if (!modal) return;
+    modal.classList.toggle("hidden", !visible);
+    modal.classList.toggle("modal-active", visible);
+};
+const applyVolumeToMenuVideo = (volume) => {
+    document.querySelector("#menu-stage video")?.volume = volume;
+};
+
+const launchGameScene = (menuStage) => {
+    const currentNight = readNight();
+    stopGameTimer();
+    setMenuStage(menuStage);
+
+    const dangerDisplay = createDangerDisplay(menuStage);
+    menuStage.appendChild(createNightLabel(currentNight));
+
+    const doorControls = initDoorControls(menuStage);
+    const lightControls = initLightControls(menuStage);
+    const batteryDisplay = createBatteryDisplay(menuStage, 6 * 60);
+
+    let hasEnded = false;
+    let stopEnemyBehavior = null;
+    const cleanup = () => {
+        dangerDisplay.destroy();
+        doorControls.destroy();
+        lightControls.destroy();
+        batteryDisplay.destroy();
+        stopGameTimer();
+    };
+
+    const triggerGameOver = async () => {
+        if (hasEnded) return;
+        hasEnded = true;
+        stopEnemyBehavior?.();
+        cleanup();
+        await playGameOverSequence(menuStage, readVolume());
+    };
+
+    const handleWin = () => {
+        if (hasEnded) return;
+        hasEnded = true;
+        stopEnemyBehavior?.();
+        cleanup();
+        ShowWinScreen(menuStage);
+    };
+
+    stopEnemyBehavior = startSpringtrapBehavior(currentNight, doorControls, lightControls, dangerDisplay, triggerGameOver);
+    menuStage.append(createButton("skip-timer-btn", "Finir timer", handleWin));
+    menuStage.append(createButton("jumpscare-btn", "Jumpscare", async () => await triggerGameOver()));
+    startGameTimer(menuStage, 6 * 60, handleWin);
+};
+
+const playNightIntroThenLaunch = async (menuStage, introPath, forcedNight = null) => {
+    stopGameTimer();
+    setMenuStage(menuStage);
+    if (typeof forcedNight === "number") localStorage.setItem(NIGHT_KEY, String(forcedNight));
+
+    const introVideo = document.createElement("video");
+    Object.assign(introVideo, {
+        src: introPath,
+        autoplay: true,
+        controls: false,
+        loop: false,
+        playsInline: true,
+        volume: readVolume()
+    });
+    Object.assign(introVideo.style, {
+        width: "100%",
+        height: "100%",
+        objectFit: "contain"
+    });
+
+    let hasLaunchedGame = false;
+    introVideo.addEventListener("ended", () => {
+        if (!hasLaunchedGame) {
+            hasLaunchedGame = true;
+            launchGameScene(menuStage);
+        }
+    }, { once: true });
+
+    menuStage.appendChild(introVideo);
+    try {
+        await introVideo.play();
+    } catch {
+        menuStage.addEventListener("click", () => introVideo.play().catch(() => {}), { once: true });
+    }
+};
+
 window.addEventListener("DOMContentLoaded", () => {
-    const VOLUME_KEY = "gameVolume";
     const btnPlay = document.getElementById("Jouer");
     const menuButtons = document.getElementById("menu-buttons");
     const btnOptions = document.getElementById("Options");
@@ -27,218 +137,48 @@ window.addEventListener("DOMContentLoaded", () => {
     const closeBtn = document.getElementById("close-credits");
     const quitBtn = document.getElementById("Quitter");
 
-    const clampVolume = (value) => Math.max(0, Math.min(1, value));
-    const readVolume = () => {
-        const stored = Number(localStorage.getItem(VOLUME_KEY));
-        return Number.isNaN(stored) ? 0.5 : clampVolume(stored);
-    };
-
     const shouldShowNight2Button = prepareNightForMenuLoad();
-
-    const launchGameScene = (menuStage) => {
-        const currentNight = readNight();
-        stopGameTimer();
-        menuStage.innerHTML = "";
-        menuStage.style.display = "flex";
-        menuStage.style.justifyContent = "center";
-        menuStage.style.alignItems = "center";
-        menuStage.style.backgroundColor = "#000";
-
-        const dangerDisplay = createDangerDisplay(menuStage);
-        menuStage.appendChild(createNightLabel(currentNight));
-
-        const doorControls = initDoorControls(menuStage);
-        const lightControls = initLightControls(menuStage);
-        const batteryDisplay = createBatteryDisplay(menuStage, 6 * 60);
-
-        let hasEnded = false;
-        const triggerGameOver = async () => {
-            if (hasEnded) {
-                return;
-            }
-
-            hasEnded = true;
-            stopEnemyBehavior();
-            dangerDisplay.destroy();
-            doorControls.destroy();
-            lightControls.destroy();
-            batteryDisplay.destroy();
-            stopGameTimer();
-            await playGameOverSequence(menuStage, readVolume());
-        };
-
-        const stopEnemyBehavior = startSpringtrapBehavior(currentNight, doorControls, lightControls, dangerDisplay, triggerGameOver);
-
-        const handleWin = () => {
-            if (hasEnded) {
-                return;
-            }
-
-            hasEnded = true;
-            stopEnemyBehavior();
-            dangerDisplay.destroy();
-            doorControls.destroy();
-            lightControls.destroy();
-            batteryDisplay.destroy();
-            ShowWinScreen(menuStage);
-        };
-
-        const skipTimerButton = document.createElement("button");
-        skipTimerButton.id = "skip-timer-btn";
-        skipTimerButton.textContent = "Finir timer";
-        skipTimerButton.addEventListener("click", () => {
-            handleWin();
-        });
-
-        menuStage.appendChild(skipTimerButton);
-
-        const jumpscareButton = document.createElement("button");
-        jumpscareButton.id = "jumpscare-btn";
-        jumpscareButton.textContent = "Jumpscare";
-        jumpscareButton.addEventListener("click", async () => {
-            await triggerGameOver();
-        });
-
-        menuStage.appendChild(jumpscareButton);
-        startGameTimer(menuStage, 6 * 60, handleWin);
-    };
-
-    const playNightIntroThenLaunch = async (menuStage, introPath, forcedNight = null) => {
-        stopGameTimer();
-        menuStage.innerHTML = "";
-        menuStage.style.display = "flex";
-        menuStage.style.justifyContent = "center";
-        menuStage.style.alignItems = "center";
-        menuStage.style.backgroundColor = "#000";
-
-        if (typeof forcedNight === "number") {
-            localStorage.setItem(NIGHT_KEY, String(forcedNight));
-        }
-
-        const introVideo = document.createElement("video");
-        introVideo.src = introPath;
-        introVideo.autoplay = true;
-        introVideo.controls = false;
-        introVideo.loop = false;
-        introVideo.playsInline = true;
-        introVideo.volume = readVolume();
-        introVideo.style.width = "100%";
-        introVideo.style.height = "100%";
-        introVideo.style.objectFit = "contain";
-
-        let hasLaunchedGame = false;
-        const launchIfNeeded = () => {
-            if (hasLaunchedGame) {
-                return;
-            }
-
-            hasLaunchedGame = true;
-            launchGameScene(menuStage);
-        };
-
-        introVideo.addEventListener("ended", launchIfNeeded, { once: true });
-        menuStage.appendChild(introVideo);
-
-        try {
-            await introVideo.play();
-        } catch {
-            menuStage.addEventListener("click", () => {
-                introVideo.play().catch(() => {});
-            }, { once: true });
-        }
-    };
-    const applyVolumeToMenuVideo = (volume) => {
-        const menuVideo = document.querySelector("#menu-stage video");
-        if (menuVideo) {
-            menuVideo.volume = volume;
-        }
-    };
 
     if (volumeSlider && volumeDisplay) {
         const initialVolume = Math.round(readVolume() * 100);
         volumeSlider.value = String(initialVolume);
         volumeDisplay.textContent = `${initialVolume}%`;
         applyVolumeToMenuVideo(initialVolume / 100);
-
         volumeSlider.addEventListener("input", () => {
-            const volumePercent = Number(volumeSlider.value);
-            const volume = clampVolume(volumePercent / 100);
+            const volume = clampVolume(Number(volumeSlider.value) / 100);
             localStorage.setItem(VOLUME_KEY, String(volume));
-            volumeDisplay.textContent = `${volumePercent}%`;
+            volumeDisplay.textContent = `${Math.round(volume * 100)}%`;
             applyVolumeToMenuVideo(volume);
         });
     }
 
-    if (btnOptions) {
-        btnOptions.addEventListener("click", () => {
-            if (!optionsModal) return;
-            optionsModal.classList.remove("hidden");
-            optionsModal.classList.add("modal-active");
-        });
-    }
+    btnOptions?.addEventListener("click", () => toggleModal(optionsModal, true));
+    closeOptionsBtn?.addEventListener("click", () => toggleModal(optionsModal, false));
+    btnCredits?.addEventListener("click", () => toggleModal(creditsModal, true));
+    closeBtn?.addEventListener("click", () => toggleModal(creditsModal, false));
 
-    if (closeOptionsBtn && optionsModal) {
-        closeOptionsBtn.addEventListener("click", () => {
-            optionsModal.classList.remove("modal-active");
-            optionsModal.classList.add("hidden");
-        });
+    quitBtn?.addEventListener("click", () => {
+        if (window.opener || window.history.length <= 1) {
+            window.close();
+        } else {
+            setTimeout(() => {
+                if (!window.closed) window.location.replace("about:blank");
+            }, 50);
+        }
+    });
 
-    }
-
-    const openCredits = () => {
-        creditsModal.classList.remove("hidden");
-        creditsModal.classList.add("modal-active");
-    };
-
-    const closeCredits = () => {
-        creditsModal.classList.remove("modal-active");
-        creditsModal.classList.add("hidden");
-    };
-
-    btnCredits.addEventListener("click", openCredits);
-    closeBtn.addEventListener("click", closeCredits);
-
-
-    if (quitBtn) {
-        quitBtn.addEventListener("click", () => {
-            if (window.opener || window.history.length <= 1) {
-                window.close();
-            } else {
-                setTimeout(() => {
-                    if (!window.closed) {
-                        window.location.replace("about:blank");
-                    }
-                }, 50);
-            }
-        });
-    }
-
-    if (btnPlay) {
-        btnPlay.addEventListener("click", async () => {
-            const menuStage = document.getElementById("menu-stage");
-            if (!menuStage) return;
-
-            await playNightIntroThenLaunch(menuStage, INTRO_NIGHT_1_PATH, 1);
-        });
-    }
+    btnPlay?.addEventListener("click", async () => {
+        const menuStage = document.getElementById("menu-stage");
+        if (menuStage) await playNightIntroThenLaunch(menuStage, INTRO_NIGHT_1_PATH, 1);
+    });
 
     if (shouldShowNight2Button && menuButtons) {
-        const btnNight2 = document.createElement("button");
-        btnNight2.id = "Night2";
-        btnNight2.textContent = "Continuer";
-
-        btnNight2.addEventListener("click", async () => {
+        const btnNight2 = createButton("Night2", "Continuer", async () => {
             const menuStage = document.getElementById("menu-stage");
             if (!menuStage) return;
-
             consumeNight2ButtonFlag();
             await playNightIntroThenLaunch(menuStage, INTRO_NIGHT_2_PATH, 2);
         });
-
-        if (btnOptions && btnOptions.parentElement === menuButtons) {
-            menuButtons.insertBefore(btnNight2, btnOptions);
-        } else {
-            menuButtons.appendChild(btnNight2);
-        }
+        menuButtons.insertBefore(btnNight2, btnOptions?.parentElement === menuButtons ? btnOptions : null);
     }
 });
