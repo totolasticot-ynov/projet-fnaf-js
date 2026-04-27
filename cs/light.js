@@ -128,6 +128,12 @@ export function initLightControls(menuStage) {
 		isLightOn(side) {
 			return side === "left" ? state.left : state.right;
 		},
+		// Éteint toutes les lumières immédiatement.
+		turnOffAll() {
+			state.left = false;
+			state.right = false;
+			update();
+		},
 		// Permet d'activer ou désactiver l'utilisation des lumières.
 		setDisabled(value) {
 			disabled = Boolean(value);

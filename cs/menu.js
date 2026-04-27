@@ -110,6 +110,8 @@ window.addEventListener("DOMContentLoaded", () => {
         );
 
 		batteryDisplay.onEmpty(() => {
+			doorControls.openAll();
+			lightControls.turnOffAll();
 			doorControls.setDisabled(true);
 			lightControls.setDisabled(true);
 			triggerGameOver();
