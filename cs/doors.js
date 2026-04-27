@@ -1,26 +1,3 @@
-// Crée un panneau de porte pour l'office.
-function createDoorPanel(side) {
-	const panel = document.createElement("div");
-
-	Object.assign(panel.style, {
-		position: "absolute",
-		top: "0",
-		bottom: "0",
-		width: "13%",
-		left: side === "left" ? "0" : "auto",
-		right: side === "right" ? "0" : "auto",
-		background: "linear-gradient(to bottom, rgba(32, 32, 32, 0.95), rgba(0, 0, 0, 0.95))",
-		borderLeft: side === "right" ? "2px solid #555" : "none",
-		borderRight: side === "left" ? "2px solid #555" : "none",
-		opacity: "0",
-		pointerEvents: "none",
-		transition: "opacity 140ms ease",
-		zIndex: "7"
-	});
-
-	return panel;
-}
-
 // Crée le bouton pour contrôler l'ouverture/fermeture d'une porte.
 function createDoorButton(side) {
 	const button = document.createElement("button");
@@ -51,11 +28,6 @@ function createDoorButton(side) {
 
 // Initialise les contrôles de portes dans la scène de jeu.
 export function initDoorControls(menuStage) {
-	const leftDoorPanel = createDoorPanel("left");
-	const rightDoorPanel = createDoorPanel("right");
-	menuStage.appendChild(leftDoorPanel);
-	menuStage.appendChild(rightDoorPanel);
-
 	const leftButton = createDoorButton("left");
 	const rightButton = createDoorButton("right");
 	menuStage.appendChild(leftButton);
@@ -71,8 +43,6 @@ export function initDoorControls(menuStage) {
 
 	// Met à jour l'apparence des panneaux et des boutons selon l'état.
 	const update = () => {
-		leftDoorPanel.style.opacity = state.left ? "1" : "0";
-		rightDoorPanel.style.opacity = state.right ? "1" : "0";
 		leftButton.textContent = "Porte G";
 		rightButton.textContent = "Porte D";
 		leftButton.style.borderColor = state.left ? "#ff6d6d" : "#5f6a71";
@@ -160,8 +130,6 @@ export function initDoorControls(menuStage) {
 		destroy() {
 			leftButton.remove();
 			rightButton.remove();
-			leftDoorPanel.remove();
-			rightDoorPanel.remove();
 			listeners.clear();
 		}
 	};

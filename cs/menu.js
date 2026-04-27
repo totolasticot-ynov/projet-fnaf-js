@@ -79,9 +79,36 @@ window.addEventListener("DOMContentLoaded", () => {
             });
         };
 
-        const doorUnsubscribe = doorControls.onChange(updateBatteryUsage);
+        const updateDoorBackground = () => {
+            if (doorControls.isDoorClosed("right")) {
+                dangerDisplay.setDoor("right");
+                return;
+            }
+
+            if (doorControls.isDoorClosed("left")) {
+                dangerDisplay.setDoor("left");
+                return;
+            }
+
+            dangerDisplay.setOffice();
+        };
+
+        const doorUnsubscribe = doorControls.onChange(() => {
+            updateBatteryUsage();
+            updateDoorBackground();
+        });
         const lightUnsubscribe = lightControls.onChange(updateBatteryUsage);
         updateBatteryUsage();
+
+        let stopEnemyBehavior = () => {};
+        stopEnemyBehavior = startSpringtrapBehavior(
+            currentNight,
+            doorControls,
+            lightControls,
+            dangerDisplay,
+            triggerGameOver
+        );
+
 		batteryDisplay.onEmpty(() => {
 			doorControls.openAll();
 			lightControls.turnOffAll();
