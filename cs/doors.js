@@ -1,25 +1,4 @@
-function createDoorPanel(side) {
-	const panel = document.createElement("div");
-
-	Object.assign(panel.style, {
-		position: "absolute",
-		top: "0",
-		bottom: "0",
-		width: "13%",
-		left: side === "left" ? "0" : "auto",
-		right: side === "right" ? "0" : "auto",
-		background: "linear-gradient(to bottom, rgba(32, 32, 32, 0.95), rgba(0, 0, 0, 0.95))",
-		borderLeft: side === "right" ? "2px solid #555" : "none",
-		borderRight: side === "left" ? "2px solid #555" : "none",
-		opacity: "0",
-		pointerEvents: "none",
-		transition: "opacity 140ms ease",
-		zIndex: "7"
-	});
-
-	return panel;
-}
-
+// Crée le bouton pour contrôler l'ouverture/fermeture d'une porte.
 function createDoorButton(side) {
 	const button = document.createElement("button");
 
@@ -47,25 +26,23 @@ function createDoorButton(side) {
 	return button;
 }
 
+// Initialise les contrôles de portes dans la scène de jeu.
 export function initDoorControls(menuStage) {
-	const leftDoorPanel = createDoorPanel("left");
-	const rightDoorPanel = createDoorPanel("right");
-	menuStage.appendChild(leftDoorPanel);
-	menuStage.appendChild(rightDoorPanel);
-
 	const leftButton = createDoorButton("left");
 	const rightButton = createDoorButton("right");
 	menuStage.appendChild(leftButton);
 	menuStage.appendChild(rightButton);
 
+	// État local des portes (fermée = true, ouverte = false).
 	const state = {
 		left: false,
 		right: false
 	};
+	const listeners = new Set();
+	let disabled = false;
 
+	// Met à jour l'apparence des panneaux et des boutons selon l'état.
 	const update = () => {
-		leftDoorPanel.style.opacity = state.left ? "1" : "0";
-		rightDoorPanel.style.opacity = state.right ? "1" : "0";
 		leftButton.textContent = "Porte G";
 		rightButton.textContent = "Porte D";
 		leftButton.style.borderColor = state.left ? "#ff6d6d" : "#5f6a71";
@@ -74,14 +51,42 @@ export function initDoorControls(menuStage) {
 		rightButton.style.boxShadow = state.right ? "inset 0 1px 0 rgba(255,255,255,0.1), 0 0 14px rgba(255, 68, 68, 0.72)" : "inset 0 1px 0 rgba(255,255,255,0.12), 0 0 8px rgba(0,0,0,0.55)";
 		leftButton.style.background = state.left ? "linear-gradient(180deg, #4d1f1f 0%, #2f0f0f 100%)" : "linear-gradient(180deg, #2b3136 0%, #171b1e 100%)";
 		rightButton.style.background = state.right ? "linear-gradient(180deg, #4d1f1f 0%, #2f0f0f 100%)" : "linear-gradient(180deg, #2b3136 0%, #171b1e 100%)";
+		if (disabled) {
+			leftButton.style.opacity = "0.55";
+			rightButton.style.opacity = "0.55";
+		} else {
+			leftButton.style.opacity = "1";
+			rightButton.style.opacity = "1";
+		}
+		listeners.forEach((listener) => {
+			listener({ ...state });
+		});
 	};
 
+	// Clic sur le bouton de la porte gauche.
 	leftButton.addEventListener("click", () => {
+		if (disabled) {
+			return;
+		}
+
+		const willBeClosed = !state.left;
+		if (willBeClosed && state.right) {
+			return; // empêcher de fermer les deux portes en même temps
+		}
 		state.left = !state.left;
 		update();
 	});
 
+	// Clic sur le bouton de la porte droite.
 	rightButton.addEventListener("click", () => {
+		if (disabled) {
+			return;
+		}
+
+		const willBeClosed = !state.right;
+		if (willBeClosed && state.left) {
+			return; // empêcher de fermer les deux portes en même temps
+		}
 		state.right = !state.right;
 		update();
 	});
@@ -89,14 +94,43 @@ export function initDoorControls(menuStage) {
 	update();
 
 	return {
+		// Indique si une porte est fermée.
 		isDoorClosed(side) {
 			return side === "left" ? state.left : state.right;
 		},
+		// Ouvre toutes les portes immédiatement.
+		openAll() {
+			state.left = false;
+			state.right = false;
+			update();
+		},
+		// Permet d'activer ou désactiver l'utilisation des portes.
+		setDisabled(value) {
+			disabled = Boolean(value);
+			leftButton.disabled = disabled;
+			rightButton.disabled = disabled;
+			leftButton.style.cursor = disabled ? "not-allowed" : "pointer";
+			rightButton.style.cursor = disabled ? "not-allowed" : "pointer";
+			update();
+		},
+		// Permet d'écouter les changements d'état des portes.
+		onChange(listener) {
+			if (typeof listener !== "function") {
+				return () => {};
+			}
+
+			listeners.add(listener);
+			listener({ ...state });
+
+			return () => {
+				listeners.delete(listener);
+			};
+		},
+		// Nettoie le DOM en supprimant les boutons et panneaux.
 		destroy() {
 			leftButton.remove();
 			rightButton.remove();
-			leftDoorPanel.remove();
-			rightDoorPanel.remove();
+			listeners.clear();
 		}
 	};
 }

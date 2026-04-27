@@ -1,14 +1,23 @@
 import { ShowWinScreen, startGameTimer, stopGameTimer } from "./time.js";
-import { playJumpscareVideoAsync } from "./home.js";
 import { playGameOverSequence } from "./gameover.js";
 import { createNightLabel, readNight, startSpringtrapBehavior } from "./enemy.js";
+import { createDangerDisplay } from "./danger.js";
 import { initDoorControls } from "./doors.js";
 import { initLightControls } from "./light.js";
 import { saveGame, markNightCompleted } from "./save.js";
+import { createBatteryDisplay } from "./battery.js";
+import {
+    INTRO_NIGHT_1_PATH,
+    INTRO_NIGHT_2_PATH,
+    NIGHT_KEY,
+    consumeNight2ButtonFlag,
+    prepareNightForMenuLoad
+} from "./nights.js";
 
 window.addEventListener("DOMContentLoaded", () => {
     const VOLUME_KEY = "gameVolume";
     const btnPlay = document.getElementById("Jouer");
+    const menuButtons = document.getElementById("menu-buttons");
     const btnOptions = document.getElementById("Options");
     const optionsModal = document.getElementById("options-modal");
     const closeOptionsBtn = document.getElementById("close-options");
@@ -25,6 +34,8 @@ window.addEventListener("DOMContentLoaded", () => {
         return Number.isNaN(stored) ? 0.5 : clampVolume(stored);
     };
 
+    const shouldShowNight2Button = prepareNightForMenuLoad();
+
     const launchGameScene = (menuStage) => {
         const currentNight = readNight();
         stopGameTimer();
@@ -34,20 +45,12 @@ window.addEventListener("DOMContentLoaded", () => {
         menuStage.style.alignItems = "center";
         menuStage.style.backgroundColor = "#000";
 
-        const officeImage = document.createElement("img");
-        officeImage.src = "Assets/images/office.png";
-        officeImage.alt = "Office";
-        officeImage.style.width = "100%";
-        officeImage.style.height = "100%";
-        officeImage.style.objectFit = "contain";
-        officeImage.style.cursor = "default";
-        officeImage.draggable = false;
-
-        menuStage.appendChild(officeImage);
+        const dangerDisplay = createDangerDisplay(menuStage);
         menuStage.appendChild(createNightLabel(currentNight));
 
         const doorControls = initDoorControls(menuStage);
         const lightControls = initLightControls(menuStage);
+        const batteryDisplay = createBatteryDisplay(menuStage, 6 * 60, currentNight);
 
         // État du jeu pour la sauvegarde
         const gameState = {
@@ -59,36 +62,91 @@ window.addEventListener("DOMContentLoaded", () => {
         };
 
         let hasEnded = false;
-        const stopEnemyBehavior = startSpringtrapBehavior(menuStage, currentNight, doorControls, async () => {
+        const triggerGameOver = async () => {
             if (hasEnded) {
                 return;
             }
 
             hasEnded = true;
             stopEnemyBehavior();
+            dangerDisplay.destroy();
             doorControls.destroy();
             lightControls.destroy();
+            batteryDisplay.destroy();
+            doorUnsubscribe();
+            lightUnsubscribe();
             stopGameTimer();
             // Sauvegarder à la fin de la session (game over)
             saveGame(gameState);
             await playGameOverSequence(menuStage, readVolume(), null, gameState);
-        });
+        };
 
-        const handleWin = async () => {
+        const updateBatteryUsage = () => {
+            const doorsActive = (doorControls.isDoorClosed("left") ? 1 : 0) + (doorControls.isDoorClosed("right") ? 1 : 0);
+            const lightsActive = (lightControls.isLightOn("left") ? 1 : 0) + (lightControls.isLightOn("right") ? 1 : 0);
+
+            batteryDisplay.setUsage({
+                doors: doorsActive,
+                lights: lightsActive
+            });
+        };
+
+        const updateDoorBackground = () => {
+            if (doorControls.isDoorClosed("right")) {
+                dangerDisplay.setDoor("right");
+                return;
+            }
+
+            if (doorControls.isDoorClosed("left")) {
+                dangerDisplay.setDoor("left");
+                return;
+            }
+
+            dangerDisplay.setOffice();
+        };
+
+        const doorUnsubscribe = doorControls.onChange(() => {
+            updateBatteryUsage();
+            updateDoorBackground();
+        });
+        const lightUnsubscribe = lightControls.onChange(updateBatteryUsage);
+        updateBatteryUsage();
+
+        let stopEnemyBehavior = () => {};
+        stopEnemyBehavior = startSpringtrapBehavior(
+            currentNight,
+            doorControls,
+            lightControls,
+            dangerDisplay,
+            triggerGameOver
+        );
+
+		batteryDisplay.onEmpty(() => {
+			doorControls.openAll();
+			lightControls.turnOffAll();
+			doorControls.setDisabled(true);
+			lightControls.setDisabled(true);
+			triggerGameOver();
+		});
+        const handleWin = () => {
             if (hasEnded) {
                 return;
             }
 
             hasEnded = true;
             stopEnemyBehavior();
+            dangerDisplay.destroy();
             doorControls.destroy();
             lightControls.destroy();
-            
+            batteryDisplay.destroy();
+            doorUnsubscribe();
+            lightUnsubscribe();
+
             // Sauvegarder la progression quand le joueur gagne
             gameState.nightsCompleted = [...(gameState.nightsCompleted || []), currentNight];
             markNightCompleted(currentNight);
             saveGame(gameState);
-            
+
             ShowWinScreen(menuStage);
         };
 
@@ -105,14 +163,14 @@ window.addEventListener("DOMContentLoaded", () => {
         jumpscareButton.id = "jumpscare-btn";
         jumpscareButton.textContent = "Jumpscare";
         jumpscareButton.addEventListener("click", async () => {
-            await playJumpscareVideoAsync();
+            await triggerGameOver();
         });
 
         menuStage.appendChild(jumpscareButton);
         startGameTimer(menuStage, 6 * 60, handleWin);
     };
 
-    const playGameIntroThenLaunch = async (menuStage) => {
+    const playNightIntroThenLaunch = async (menuStage, introPath, forcedNight = null) => {
         stopGameTimer();
         menuStage.innerHTML = "";
         menuStage.style.display = "flex";
@@ -120,8 +178,12 @@ window.addEventListener("DOMContentLoaded", () => {
         menuStage.style.alignItems = "center";
         menuStage.style.backgroundColor = "#000";
 
+        if (typeof forcedNight === "number") {
+            localStorage.setItem(NIGHT_KEY, String(forcedNight));
+        }
+
         const introVideo = document.createElement("video");
-        introVideo.src = "Assets/video/Intro-Fnaf.mp4";
+        introVideo.src = introPath;
         introVideo.autoplay = true;
         introVideo.controls = false;
         introVideo.loop = false;
@@ -223,7 +285,27 @@ window.addEventListener("DOMContentLoaded", () => {
             const menuStage = document.getElementById("menu-stage");
             if (!menuStage) return;
 
-            await playGameIntroThenLaunch(menuStage);
+            await playNightIntroThenLaunch(menuStage, INTRO_NIGHT_1_PATH, 1);
         });
+    }
+
+    if (shouldShowNight2Button && menuButtons) {
+        const btnNight2 = document.createElement("button");
+        btnNight2.id = "Night2";
+        btnNight2.textContent = "Continuer";
+
+        btnNight2.addEventListener("click", async () => {
+            const menuStage = document.getElementById("menu-stage");
+            if (!menuStage) return;
+
+            consumeNight2ButtonFlag();
+            await playNightIntroThenLaunch(menuStage, INTRO_NIGHT_2_PATH, 2);
+        });
+
+        if (btnOptions && btnOptions.parentElement === menuButtons) {
+            menuButtons.insertBefore(btnNight2, btnOptions);
+        } else {
+            menuButtons.appendChild(btnNight2);
+        }
     }
 });

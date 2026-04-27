@@ -8,13 +8,14 @@ const ENEMY_ATTACK_TIMEOUT_BY_NIGHT = {
 	3: 5000
 };
 
+// Lit la nuit actuelle depuis le localStorage.
 export function readNight() {
 	// Essayer d'abord de lire depuis save.js
 	const savedGame = loadGame();
 	if (savedGame && savedGame.currentNight) {
 		return Math.max(1, Math.min(MAX_NIGHT, Math.floor(savedGame.currentNight)));
 	}
-	
+
 	// Fallback sur localStorage direct
 	const storedNight = Number(localStorage.getItem(K.N));
 	if (Number.isNaN(storedNight)) {
@@ -24,60 +25,51 @@ export function readNight() {
 	return Math.max(1, Math.min(MAX_NIGHT, Math.floor(storedNight)));
 }
 
-function getEnemyMoveChance(night) {
-	return Math.min(0.9, night / 5);
-}
+// Retourne la probabilité d'une attaque en fonction de la nuit.
+const getChance = (night) => Math.min(0.9, night / 5);
+// Retourne la durée d'attente avant le prochain essai d'attaque.
+const getTimeout = (night) => ENEMY_ATTACK_TIMEOUT_BY_NIGHT[night] ?? ENEMY_ATTACK_TIMEOUT_BY_NIGHT[1];
 
-function getEnemyAttackTimeout(night) {
-	return ENEMY_ATTACK_TIMEOUT_BY_NIGHT[night] ?? ENEMY_ATTACK_TIMEOUT_BY_NIGHT[1];
-}
-
+// Joue un son de pas directionnel à gauche ou à droite.
 function playDirectionalFootsteps(side) {
-	const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-	if (!AudioContextClass) {
-		return;
-	}
+	const AudioCtx = window.AudioContext || window.webkitAudioContext;
+	if (!AudioCtx) return;
+	const ctx = new AudioCtx();
+	const audio = new Audio(FOOTSTEP_AUDIO_PATH);
+	audio.preload = audio.loop = false;
+	audio.volume = 1;
 
-	const audioContext = new AudioContextClass();
-	const footstepsAudio = new Audio(FOOTSTEP_AUDIO_PATH);
-	footstepsAudio.preload = "auto";
-	footstepsAudio.loop = false;
-	footstepsAudio.volume = 1;
+	const src = ctx.createMediaElementSource(audio);
+	const gain = ctx.createGain();
+	gain.gain.value = 0.9;
 
-	const source = audioContext.createMediaElementSource(footstepsAudio);
-	const gainNode = audioContext.createGain();
-	gainNode.gain.value = 0.9;
-
-	if (typeof audioContext.createStereoPanner === "function") {
-		const stereoPanner = audioContext.createStereoPanner();
-		stereoPanner.pan.value = side === "left" ? -1 : 1;
-		source.connect(stereoPanner);
-		stereoPanner.connect(gainNode);
+	if (ctx.createStereoPanner) {
+		const pan = ctx.createStereoPanner();
+		pan.pan.value = side === "left" ? -1 : 1;
+		src.connect(pan).connect(gain);
 	} else {
-		source.connect(gainNode);
+		src.connect(gain);
 	}
 
-	gainNode.connect(audioContext.destination);
-
-	const cleanup = () => {
-		source.disconnect();
-		gainNode.disconnect();
-		audioContext.close().catch(() => {});
+	gain.connect(ctx.destination);
+	const clean = () => {
+		src.disconnect();
+		gain.disconnect();
+		ctx.close().catch(() => {});
 	};
 
-	footstepsAudio.addEventListener("ended", cleanup, { once: true });
-	footstepsAudio.addEventListener("error", cleanup, { once: true });
-
-	audioContext.resume().catch(() => {});
-	footstepsAudio.play().catch(cleanup);
+	audio.addEventListener("ended", clean, { once: true });
+	audio.addEventListener("error", clean, { once: true });
+	ctx.resume().catch(() => {});
+	audio.play().catch(clean);
 }
 
+// Crée un indicateur visuel de la nuit actuelle.
 export function createNightLabel(night) {
-	const nightLabel = document.createElement("div");
-	nightLabel.id = "night-indicator";
-	nightLabel.textContent = `Nuit ${night}`;
-
-	Object.assign(nightLabel.style, {
+	const label = document.createElement("div");
+	label.id = "night-indicator";
+	label.textContent = `Nuit ${night}`;
+	Object.assign(label.style, {
 		position: "absolute",
 		top: "16px",
 		right: "24px",
@@ -87,76 +79,83 @@ export function createNightLabel(night) {
 		textShadow: "0 0 12px rgba(0, 0, 0, 0.9)",
 		zIndex: "6"
 	});
-
-	return nightLabel;
+	return label;
 }
 
-export function startSpringtrapBehavior(menuStage, night, doorControls, onGameOver) {
-	const chance = getEnemyMoveChance(night);
-	const attackTimeoutMs = getEnemyAttackTimeout(night);
-	let activeAttackTimeoutId = null;
-	let activeAttackSide = null;
-	let hasTriggeredGameOver = false;
+// Démarre le comportement de Springtrap pendant la nuit.
+// `doors` et `lights` permettent de vérifier si le joueur protège son office.
+// `dangerDisplay` affiche l'image de Springtrap ou de l'office.
+// `onGameOver` est appelé si le joueur perd.
+export function startSpringtrapBehavior(night, doors, lights, dangerDisplay, onGameOver) {
+	let atkId = null;
+	let atkSide = null;
+	let ended = false;
+	let unsub = null;
 
-	const clearActiveAttack = () => {
-		if (activeAttackTimeoutId !== null) {
-			clearTimeout(activeAttackTimeoutId);
-			activeAttackTimeoutId = null;
-		}
+	// Affiche l'état normal de l'office.
+	const showOffice = () => dangerDisplay?.setOffice?.();
 
-		activeAttackSide = null;
-	};
-
-	const triggerGameOver = () => {
-		if (hasTriggeredGameOver) {
+	// Affiche Springtrap uniquement si il y a une attaque et que la lumière est allumée du côté correspondant.
+	const showSpringtrap = () => {
+		if (!atkSide || !lights?.isLightOn?.(atkSide)) {
+			showOffice();
 			return;
 		}
 
-		hasTriggeredGameOver = true;
-		clearActiveAttack();
-
-		if (typeof onGameOver === "function") {
-			onGameOver();
-		}
+		dangerDisplay?.setSpringtrap?.(atkSide);
 	};
 
-	const startAttack = (side) => {
-		if (activeAttackTimeoutId !== null) {
-			return;
-		}
+	// Réinitialise l'attaque en cours et remet l'office visible.
+	const clear = () => {
+		clearTimeout(atkId);
+		atkId = null;
+		atkSide = null;
+		showOffice();
+	};
 
-		activeAttackSide = side;
-		playDirectionalFootsteps(side);
+	// Termine la partie si Springtrap réussit à entrer.
+	const gameOver = () => {
+		if (ended) return;
+		ended = true;
+		clear();
+		onGameOver?.();
+	};
 
-		activeAttackTimeoutId = setTimeout(() => {
-			activeAttackTimeoutId = null;
+	// Lance une attaque sur un côté donné.
+	const attack = (s) => {
+		if (atkId) return;
+		atkSide = s;
+		playDirectionalFootsteps(s);
+		showSpringtrap();
 
-			if (!doorControls || typeof doorControls.isDoorClosed !== "function" || !doorControls.isDoorClosed(activeAttackSide)) {
-				triggerGameOver();
+		atkId = setTimeout(() => {
+			atkId = null;
+			if (!doors?.isDoorClosed?.(atkSide)) {
+				gameOver();
 				return;
 			}
-
-			activeAttackSide = null;
-		}, attackTimeoutMs);
+			atkSide = null;
+			showOffice();
+		}, getTimeout(night));
 	};
 
-	const moveEnemyToDoor = () => {
-		if (hasTriggeredGameOver || activeAttackTimeoutId !== null || Math.random() >= chance) {
-			return;
-		}
+	// Boucle principale qui tente une attaque toutes les 2,8 secondes.
+	const iId = setInterval(() => {
+		if (ended || atkId || Math.random() >= getChance(night)) return;
+		attack(Math.random() < 0.5 ? "left" : "right");
+	}, 2800);
 
-		const goLeft = Math.random() < 0.5;
-		if (goLeft) {
-			startAttack("left");
-		} else {
-			startAttack("right");
-		}
-	};
+	// Si les lumières changent, mettre à jour l'image de Springtrap.
+	if (lights?.onChange) {
+		unsub = lights.onChange(() => showSpringtrap());
+	}
 
-	const intervalId = setInterval(moveEnemyToDoor, 2800);
+	showOffice();
 
+	// Retourne une fonction de nettoyage pour arrêter le comportement.
 	return () => {
-		clearInterval(intervalId);
-		clearActiveAttack();
+		clearInterval(iId);
+		clear();
+		unsub?.();
 	};
 }
