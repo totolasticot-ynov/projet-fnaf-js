@@ -31,7 +31,7 @@ function readCurrentNight() {
 export function saveGameResult(result, extraData = {}) {
     const now = new Date();
     const payload = {
-        id: ${now.getTime()}-${Math.random().toString(16).slice(2)},
+        id: `${now.getTime()}-${Math.random().toString(16).slice(2)}`,
         result,
         night: readCurrentNight(),
         volume: Number(localStorage.getItem("gameVolume")),
