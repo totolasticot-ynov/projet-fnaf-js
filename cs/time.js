@@ -1,12 +1,15 @@
 import { playEndSequence } from "./end.js";
 import { setNightAfterWin } from "./nights.js";
 
+// Durée par défaut de la nuit en secondes (6 minutes).
 const DEFAULT_TIMER_SECONDS = 6 * 60;
+// Clé de stockage du volume du jeu.
 const VOLUME_KEY = "gameVolume";
 
 let activeIntervalId = null;
 let activeTimerElement = null;
 
+// Lit le volume enregistré et le normalise entre 0 et 1.
 function readSavedVolume() {
 	const storedVolume = Number(localStorage.getItem(VOLUME_KEY));
 	if (Number.isNaN(storedVolume)) {
@@ -16,6 +19,7 @@ function readSavedVolume() {
 	return Math.max(0, Math.min(1, storedVolume));
 }
 
+// Convertit le temps restant en une heure de nuit affichée.
 function formatNightHour(remainingSeconds, totalDurationSeconds) {
 	const safeRemaining = Math.max(0, remainingSeconds);
 	const safeDuration = Math.max(1, totalDurationSeconds);
@@ -30,6 +34,7 @@ function formatNightHour(remainingSeconds, totalDurationSeconds) {
 	return `${hourStep} AM`;
 }
 
+// Arrête le timer et supprime l'élément visuel du DOM.
 export function stopGameTimer() {
 	if (activeIntervalId !== null) {
 		clearInterval(activeIntervalId);
@@ -42,6 +47,7 @@ export function stopGameTimer() {
 	}
 }
 
+// Affiche l'écran de victoire après la fin de la nuit.
 export async function ShowWinScreen(targetElement) {
 	stopGameTimer();
 
@@ -59,6 +65,7 @@ export async function ShowWinScreen(targetElement) {
 	});
 }
 
+// Démarre le timer de la nuit et met à jour l'affichage chaque seconde.
 export function startGameTimer(targetElement, durationInSeconds = DEFAULT_TIMER_SECONDS, onTimerEnd) {
 	if (!targetElement) {
 		return;
