@@ -5,7 +5,7 @@ function getBatteryColor(percent) {
     return "#f87171"; // batterie faible
 }
 
-// Crée et affiche le composant de batterie sur l'interface.
+// Crée et affiche la batterie sur l'interface.
 // `stage` est l'élément parent dans lequel le statut de batterie est ajouté.
 // `totalDurationSeconds` définit la durée de vie totale de la batterie en secondes.
 export function createBatteryDisplay(stage, totalDurationSeconds = 360) {
