@@ -128,6 +128,12 @@ export function initDoorControls(menuStage) {
 		isDoorClosed(side) {
 			return side === "left" ? state.left : state.right;
 		},
+		// Ouvre toutes les portes immédiatement.
+		openAll() {
+			state.left = false;
+			state.right = false;
+			update();
+		},
 		// Permet d'activer ou désactiver l'utilisation des portes.
 		setDisabled(value) {
 			disabled = Boolean(value);

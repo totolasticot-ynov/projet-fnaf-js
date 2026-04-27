@@ -83,6 +83,8 @@ window.addEventListener("DOMContentLoaded", () => {
         const lightUnsubscribe = lightControls.onChange(updateBatteryUsage);
         updateBatteryUsage();
 		batteryDisplay.onEmpty(() => {
+			doorControls.openAll();
+			lightControls.turnOffAll();
 			doorControls.setDisabled(true);
 			lightControls.setDisabled(true);
 			triggerGameOver();
