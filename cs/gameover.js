@@ -1,4 +1,5 @@
 import { playJumpscareSequence } from './jumpscare.js';
+import { saveGame, markNightCompleted } from './save.js';
 
 function renderGameOverScreen(stage) {
 	if (!stage) {
@@ -80,12 +81,16 @@ function renderGameOverScreen(stage) {
 	stage.appendChild(overlay);
 }
 
-export async function playGameOverSequence(stage, volume, onVideoReady) {
+export async function playGameOverSequence(stage, volume, onVideoReady, gameState) {
 	if (!stage) {
 		return null;
 	}
 
 	return playJumpscareSequence(stage, volume, onVideoReady, () => {
+		// Sauvegarder la progression à la fin de la session (game over)
+		if (gameState) {
+			saveGame(gameState);
+		}
 		renderGameOverScreen(stage);
 	});
 }

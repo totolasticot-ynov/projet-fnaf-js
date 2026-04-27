@@ -4,6 +4,7 @@ import { playGameOverSequence } from "./gameover.js";
 import { createNightLabel, readNight, startSpringtrapBehavior } from "./enemy.js";
 import { initDoorControls } from "./doors.js";
 import { initLightControls } from "./light.js";
+import { saveGame, markNightCompleted } from "./save.js";
 
 window.addEventListener("DOMContentLoaded", () => {
     const VOLUME_KEY = "gameVolume";
@@ -48,6 +49,15 @@ window.addEventListener("DOMContentLoaded", () => {
         const doorControls = initDoorControls(menuStage);
         const lightControls = initLightControls(menuStage);
 
+        // État du jeu pour la sauvegarde
+        const gameState = {
+            currentNight: currentNight,
+            doorStates: { left: false, right: false },
+            powerUsage: 0,
+            totalPlayTime: 0,
+            nightsCompleted: []
+        };
+
         let hasEnded = false;
         const stopEnemyBehavior = startSpringtrapBehavior(menuStage, currentNight, doorControls, async () => {
             if (hasEnded) {
@@ -59,10 +69,12 @@ window.addEventListener("DOMContentLoaded", () => {
             doorControls.destroy();
             lightControls.destroy();
             stopGameTimer();
-            await playGameOverSequence(menuStage, readVolume());
+            // Sauvegarder à la fin de la session (game over)
+            saveGame(gameState);
+            await playGameOverSequence(menuStage, readVolume(), null, gameState);
         });
 
-        const handleWin = () => {
+        const handleWin = async () => {
             if (hasEnded) {
                 return;
             }
@@ -71,6 +83,12 @@ window.addEventListener("DOMContentLoaded", () => {
             stopEnemyBehavior();
             doorControls.destroy();
             lightControls.destroy();
+            
+            // Sauvegarder la progression quand le joueur gagne
+            gameState.nightsCompleted = [...(gameState.nightsCompleted || []), currentNight];
+            markNightCompleted(currentNight);
+            saveGame(gameState);
+            
             ShowWinScreen(menuStage);
         };
 

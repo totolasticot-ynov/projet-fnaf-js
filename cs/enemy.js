@@ -1,4 +1,5 @@
-const NIGHT_KEY = "currentNight";
+import { K, loadGame } from './save.js';
+
 const MAX_NIGHT = 3;
 const FOOTSTEP_AUDIO_PATH = "Assets/sounds/FNAF Footsteps - Gaming Sound Effect (HD) - Communist Sound Effects (1080p).mp4";
 const ENEMY_ATTACK_TIMEOUT_BY_NIGHT = {
@@ -8,7 +9,14 @@ const ENEMY_ATTACK_TIMEOUT_BY_NIGHT = {
 };
 
 export function readNight() {
-	const storedNight = Number(localStorage.getItem(NIGHT_KEY));
+	// Essayer d'abord de lire depuis save.js
+	const savedGame = loadGame();
+	if (savedGame && savedGame.currentNight) {
+		return Math.max(1, Math.min(MAX_NIGHT, Math.floor(savedGame.currentNight)));
+	}
+	
+	// Fallback sur localStorage direct
+	const storedNight = Number(localStorage.getItem(K.N));
 	if (Number.isNaN(storedNight)) {
 		return 1;
 	}
