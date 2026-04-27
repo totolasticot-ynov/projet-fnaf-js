@@ -4,6 +4,7 @@ import { createNightLabel, readNight, startSpringtrapBehavior } from "./enemy.js
 import { createDangerDisplay } from "./danger.js";
 import { initDoorControls } from "./doors.js";
 import { initLightControls } from "./light.js";
+import { createBatteryDisplay } from "./battery.js";
 import {
     INTRO_NIGHT_1_PATH,
     INTRO_NIGHT_2_PATH,
@@ -48,6 +49,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
         const doorControls = initDoorControls(menuStage);
         const lightControls = initLightControls(menuStage);
+        const batteryDisplay = createBatteryDisplay(menuStage, 6 * 60);
 
         let hasEnded = false;
         const triggerGameOver = async () => {
@@ -60,6 +62,7 @@ window.addEventListener("DOMContentLoaded", () => {
             dangerDisplay.destroy();
             doorControls.destroy();
             lightControls.destroy();
+            batteryDisplay.destroy();
             stopGameTimer();
             await playGameOverSequence(menuStage, readVolume());
         };
@@ -76,6 +79,7 @@ window.addEventListener("DOMContentLoaded", () => {
             dangerDisplay.destroy();
             doorControls.destroy();
             lightControls.destroy();
+            batteryDisplay.destroy();
             ShowWinScreen(menuStage);
         };
 
