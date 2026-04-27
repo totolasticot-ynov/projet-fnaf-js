@@ -1,3 +1,4 @@
+// Crée un bouton de contrôle pour allumer ou éteindre une lumière de couloir.
 function createControlButton(label, side, offsetPx) {
 	const button = document.createElement("button");
 	button.textContent = label;
@@ -26,6 +27,8 @@ function createControlButton(label, side, offsetPx) {
 	return button;
 }
 
+// Initialise les contrôles de lumière dans la scène de jeu.
+// `menuStage` est l'élément parent qui reçoit l'interface.
 export function initLightControls(menuStage) {
 	const leftCorridorLight = document.createElement("div");
 	const rightCorridorLight = document.createElement("div");
@@ -66,11 +69,13 @@ export function initLightControls(menuStage) {
 	menuStage.appendChild(leftButton);
 	menuStage.appendChild(rightButton);
 
+	// État des deux lumières du couloir.
 	const state = {
 		left: false,
 		right: false
 	};
 
+	// Met à jour l'apparence des lumières et des boutons.
 	const update = () => {
 		leftCorridorLight.style.opacity = state.left ? "1" : "0";
 		rightCorridorLight.style.opacity = state.right ? "1" : "0";
@@ -88,14 +93,14 @@ export function initLightControls(menuStage) {
 
 	leftButton.addEventListener("click", () => {
 		const willBeTurnedOn = !state.left;
-		if (willBeTurnedOn && state.right) return;
+		if (willBeTurnedOn && state.right) return; // empêcher deux lumières allumées en même temps
 		state.left = !state.left;
 		update();
 	});
 
 	rightButton.addEventListener("click", () => {
 		const willBeTurnedOn = !state.right;
-		if (willBeTurnedOn && state.left) return;
+		if (willBeTurnedOn && state.left) return; // empêcher deux lumières allumées en même temps
 		state.right = !state.right;
 		update();
 	});
@@ -103,9 +108,11 @@ export function initLightControls(menuStage) {
 	update();
 
 	return {
+		// Vérifie si une lumière est allumée.
 		isLightOn(side) {
 			return side === "left" ? state.left : state.right;
 		},
+		// Permet à d'autres composants de recevoir les mises à jour d'état.
 		onChange(listener) {
 			if (typeof listener !== "function") {
 				return () => {};
@@ -118,6 +125,7 @@ export function initLightControls(menuStage) {
 				listeners.delete(listener);
 			};
 		},
+		// Nettoie le DOM lorsque les contrôles ne sont plus nécessaires.
 		destroy() {
 			leftButton.remove();
 			rightButton.remove();
