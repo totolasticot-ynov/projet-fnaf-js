@@ -49,7 +49,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
         const doorControls = initDoorControls(menuStage);
         const lightControls = initLightControls(menuStage);
-        const batteryDisplay = createBatteryDisplay(menuStage, 6 * 60);
+        const batteryDisplay = createBatteryDisplay(menuStage, 6 * 60, currentNight);
 
         let hasEnded = false;
         const triggerGameOver = async () => {
@@ -63,9 +63,26 @@ window.addEventListener("DOMContentLoaded", () => {
             doorControls.destroy();
             lightControls.destroy();
             batteryDisplay.destroy();
+            doorUnsubscribe();
+            lightUnsubscribe();
             stopGameTimer();
             await playGameOverSequence(menuStage, readVolume());
         };
+
+        const updateBatteryUsage = () => {
+            const doorsActive = (doorControls.isDoorClosed("left") ? 1 : 0) + (doorControls.isDoorClosed("right") ? 1 : 0);
+            const lightsActive = (lightControls.isLightOn("left") ? 1 : 0) + (lightControls.isLightOn("right") ? 1 : 0);
+
+            batteryDisplay.setUsage({
+                doors: doorsActive,
+                lights: lightsActive
+            });
+        };
+
+        const doorUnsubscribe = doorControls.onChange(updateBatteryUsage);
+        const lightUnsubscribe = lightControls.onChange(updateBatteryUsage);
+        updateBatteryUsage();
+        batteryDisplay.onEmpty(triggerGameOver);
 
         const stopEnemyBehavior = startSpringtrapBehavior(currentNight, doorControls, lightControls, dangerDisplay, triggerGameOver);
 
@@ -80,6 +97,8 @@ window.addEventListener("DOMContentLoaded", () => {
             doorControls.destroy();
             lightControls.destroy();
             batteryDisplay.destroy();
+            doorUnsubscribe();
+            lightUnsubscribe();
             ShowWinScreen(menuStage);
         };
 

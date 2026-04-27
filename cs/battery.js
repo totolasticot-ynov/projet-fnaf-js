@@ -8,8 +8,12 @@ function getBatteryColor(percent) {
 // Crée et affiche la batterie sur l'interface.
 // `stage` est l'élément parent dans lequel le statut de batterie est ajouté.
 // `totalDurationSeconds` définit la durée de vie totale de la batterie en secondes.
-export function createBatteryDisplay(stage, totalDurationSeconds = 360) {
+// `currentNight` augmente la vitesse de décharge à chaque nuit.
+export function createBatteryDisplay(stage, totalDurationSeconds = 360, currentNight = 1) {
     const duration = Math.max(1, Math.floor(totalDurationSeconds));
+    const nightFactor = 1 + Math.max(0, currentNight - 1) * 0.25;
+    const doorUsageCost = 2;
+    const lightUsageCost = 1;
 
     // Conteneur de la batterie
     const batteryContainer = document.createElement("div");
@@ -60,8 +64,16 @@ export function createBatteryDisplay(stage, totalDurationSeconds = 360) {
     stage.appendChild(batteryContainer);
 
     let remainingSeconds = duration;
+    let usageState = {
+        doors: 0,
+        lights: 0
+    };
+    let onEmptyCallback = () => {};
 
-    // Met à jour l'affichage de la batterie à chaque seconde.
+    const getConsumption = () => {
+        return (usageState.doors * doorUsageCost + usageState.lights * lightUsageCost) * nightFactor;
+    };
+
     const updateBattery = () => {
         const percent = Math.ceil((remainingSeconds / duration) * 100);
         const safePercent = Math.max(0, Math.min(100, percent));
@@ -70,21 +82,38 @@ export function createBatteryDisplay(stage, totalDurationSeconds = 360) {
         fill.style.background = getBatteryColor(safePercent);
     };
 
-    // Décrémente le temps restant toutes les secondes.
     const drainInterval = setInterval(() => {
-        remainingSeconds -= 1;
+        const consumption = getConsumption();
+        if (consumption <= 0) {
+            return;
+        }
+
+        remainingSeconds -= consumption;
         if (remainingSeconds <= 0) {
             remainingSeconds = 0;
             updateBattery();
             clearInterval(drainInterval);
+            onEmptyCallback();
             return;
         }
+
         updateBattery();
     }, 1000);
 
     updateBattery();
 
     return {
+        // Met à jour la consommation de la batterie selon l'utilisation.
+        setUsage(usage) {
+            usageState.doors = Math.max(0, Math.floor(usage.doors || 0));
+            usageState.lights = Math.max(0, Math.floor(usage.lights || 0));
+        },
+        // Permet de réagir à une batterie vide.
+        onEmpty(callback) {
+            if (typeof callback === "function") {
+                onEmptyCallback = callback;
+            }
+        },
         // Supprime l'intervalle et retire l'élément du DOM.
         destroy: () => {
             clearInterval(drainInterval);

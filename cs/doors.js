@@ -66,6 +66,7 @@ export function initDoorControls(menuStage) {
 		left: false,
 		right: false
 	};
+	const listeners = new Set();
 
 	// Met à jour l'apparence des panneaux et des boutons selon l'état.
 	const update = () => {
@@ -79,6 +80,9 @@ export function initDoorControls(menuStage) {
 		rightButton.style.boxShadow = state.right ? "inset 0 1px 0 rgba(255,255,255,0.1), 0 0 14px rgba(255, 68, 68, 0.72)" : "inset 0 1px 0 rgba(255,255,255,0.12), 0 0 8px rgba(0,0,0,0.55)";
 		leftButton.style.background = state.left ? "linear-gradient(180deg, #4d1f1f 0%, #2f0f0f 100%)" : "linear-gradient(180deg, #2b3136 0%, #171b1e 100%)";
 		rightButton.style.background = state.right ? "linear-gradient(180deg, #4d1f1f 0%, #2f0f0f 100%)" : "linear-gradient(180deg, #2b3136 0%, #171b1e 100%)";
+		listeners.forEach((listener) => {
+			listener({ ...state });
+		});
 	};
 
 	// Clic sur le bouton de la porte gauche.
@@ -108,12 +112,26 @@ export function initDoorControls(menuStage) {
 		isDoorClosed(side) {
 			return side === "left" ? state.left : state.right;
 		},
+		// Permet d'écouter les changements d'état des portes.
+		onChange(listener) {
+			if (typeof listener !== "function") {
+				return () => {};
+			}
+
+			listeners.add(listener);
+			listener({ ...state });
+
+			return () => {
+				listeners.delete(listener);
+			};
+		},
 		// Nettoie le DOM en supprimant les boutons et panneaux.
 		destroy() {
 			leftButton.remove();
 			rightButton.remove();
 			leftDoorPanel.remove();
 			rightDoorPanel.remove();
+			listeners.clear();
 		}
 	};
 }
