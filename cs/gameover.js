@@ -1,10 +1,12 @@
 import { playJumpscareSequence } from './jumpscare.js';
 
+// Affiche l'écran de game over après le jumpscare.
 function renderGameOverScreen(stage) {
 	if (!stage) {
 		return;
 	}
 
+	// Vide le contenu actuel du stage pour afficher l'écran de fin.
 	stage.innerHTML = '';
 
 	const backdrop = document.createElement('img');
@@ -31,6 +33,7 @@ function renderGameOverScreen(stage) {
 		pointerEvents: 'none'
 	});
 
+	// Crée un bouton invisible sur le visuel pour gérer les actions du menu.
 	const createMenuButton = (label, onClick) => {
 		const button = document.createElement('button');
 		button.textContent = label;
@@ -52,6 +55,7 @@ function renderGameOverScreen(stage) {
 		return button;
 	};
 
+	// Bouton de rechargement pour rejouer la partie.
 	const restartButton = createMenuButton('TRY AGAIN?', () => {
 		window.location.reload();
 	});
@@ -63,6 +67,7 @@ function renderGameOverScreen(stage) {
 		height: '10%'
 	});
 
+	// Bouton de retour au menu principal.
 	const menuButton = createMenuButton('MAIN MENU', () => {
 		window.location.reload();
 	});
@@ -80,6 +85,7 @@ function renderGameOverScreen(stage) {
 	stage.appendChild(overlay);
 }
 
+// Joue la séquence de jumpscare puis affiche l'écran de fin de partie.
 export async function playGameOverSequence(stage, volume, onVideoReady) {
 	if (!stage) {
 		return null;
