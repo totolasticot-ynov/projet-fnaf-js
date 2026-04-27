@@ -1,7 +1,9 @@
+// Chemins des images utilisées pour l'écran de danger.
 const OFFICE_PATH = "Assets/images/office.png";
 const SPRINGTRAP_LEFT_PATH = "Assets/images/springtrap-left.jpg";
 const SPRINGTRAP_RIGHT_PATH = "Assets/images/springtrap-right.jpg";
 
+// Crée l'affichage du danger dans la scène de jeu.
 export function createDangerDisplay(stage) {
 	const img = document.createElement("img");
 	img.src = OFFICE_PATH;
@@ -15,6 +17,7 @@ export function createDangerDisplay(stage) {
 	});
 	stage.appendChild(img);
 
+	// Définit l'image sur l'office lorsque le danger est absent.
 	const setOffice = () => {
 		img.src = OFFICE_PATH;
 		img.alt = "Office";
@@ -28,6 +31,7 @@ export function createDangerDisplay(stage) {
 	return {
 		setOffice,
 		setSpringtrap,
+		// Supprime l'image du DOM lorsque l'affichage n'est détruit.
 		destroy: () => img.remove()
 	};
 }
