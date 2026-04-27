@@ -2,6 +2,8 @@
 const OFFICE_PATH = "Assets/images/office.png";
 const SPRINGTRAP_LEFT_PATH = "Assets/images/springtrap-left.jpg";
 const SPRINGTRAP_RIGHT_PATH = "Assets/images/springtrap-right.jpg";
+const DOOR_LEFT_PATH = "Assets/images/door-left.png";
+const DOOR_RIGHT_PATH = "Assets/images/door-right.png";
 
 // Crée l'affichage du danger dans la scène de jeu.
 export function createDangerDisplay(stage) {
@@ -13,7 +15,10 @@ export function createDangerDisplay(stage) {
 		width: "100%",
 		height: "100%",
 		objectFit: "cover",
-		cursor: "default"
+		transform: "scale(0.94)",
+		transformOrigin: "center center",
+		cursor: "default",
+		pointerEvents: "none"
 	});
 	stage.appendChild(img);
 
@@ -28,8 +33,14 @@ export function createDangerDisplay(stage) {
 		img.alt = side === "left" ? "Springtrap left" : "Springtrap right";
 	};
 
+	const setDoor = (side) => {
+		img.src = side === "left" ? DOOR_LEFT_PATH : DOOR_RIGHT_PATH;
+		img.alt = side === "left" ? "Porte gauche fermee" : "Porte droite fermee";
+	};
+
 	return {
 		setOffice,
+		setDoor,
 		setSpringtrap,
 		// Supprime l'image du DOM lorsque l'affichage n'est détruit.
 		destroy: () => img.remove()

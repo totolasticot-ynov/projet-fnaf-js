@@ -18,6 +18,8 @@ function renderGameOverScreen(stage) {
 		width: '100%',
 		height: '100%',
 		objectFit: 'cover',
+		transform: 'scale(0.94)',
+		transformOrigin: 'center center',
 		display: 'block',
 		zIndex: '20',
 		pointerEvents: 'none'
