@@ -1,3 +1,4 @@
+// Petit wrapper pour créer et contrôler une vidéo via JavaScript.
 export class VideoPlayer {
     constructor(videoPath) {
         this.videoPath = videoPath;
@@ -5,6 +6,7 @@ export class VideoPlayer {
         this.isPlaying = false;
     }
 
+    // Crée l'élément vidéo et applique le style par défaut.
     createVideoElement() {
         this.videoElement = document.createElement('video');
         this.videoElement.src = this.videoPath;
