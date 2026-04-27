@@ -1,3 +1,4 @@
+// Crée un panneau de porte pour l'office.
 function createDoorPanel(side) {
 	const panel = document.createElement("div");
 
@@ -20,6 +21,7 @@ function createDoorPanel(side) {
 	return panel;
 }
 
+// Crée le bouton pour contrôler l'ouverture/fermeture d'une porte.
 function createDoorButton(side) {
 	const button = document.createElement("button");
 
@@ -47,6 +49,7 @@ function createDoorButton(side) {
 	return button;
 }
 
+// Initialise les contrôles de portes dans la scène de jeu.
 export function initDoorControls(menuStage) {
 	const leftDoorPanel = createDoorPanel("left");
 	const rightDoorPanel = createDoorPanel("right");
@@ -58,11 +61,13 @@ export function initDoorControls(menuStage) {
 	menuStage.appendChild(leftButton);
 	menuStage.appendChild(rightButton);
 
+	// État local des portes (fermée = true, ouverte = false).
 	const state = {
 		left: false,
 		right: false
 	};
 
+	// Met à jour l'apparence des panneaux et des boutons selon l'état.
 	const update = () => {
 		leftDoorPanel.style.opacity = state.left ? "1" : "0";
 		rightDoorPanel.style.opacity = state.right ? "1" : "0";
@@ -76,19 +81,21 @@ export function initDoorControls(menuStage) {
 		rightButton.style.background = state.right ? "linear-gradient(180deg, #4d1f1f 0%, #2f0f0f 100%)" : "linear-gradient(180deg, #2b3136 0%, #171b1e 100%)";
 	};
 
+	// Clic sur le bouton de la porte gauche.
 	leftButton.addEventListener("click", () => {
 		const willBeClosed = !state.left;
 		if (willBeClosed && state.right) {
-			return;
+			return; // empêcher de fermer les deux portes en même temps
 		}
 		state.left = !state.left;
 		update();
 	});
 
+	// Clic sur le bouton de la porte droite.
 	rightButton.addEventListener("click", () => {
 		const willBeClosed = !state.right;
 		if (willBeClosed && state.left) {
-			return;
+			return; // empêcher de fermer les deux portes en même temps
 		}
 		state.right = !state.right;
 		update();
@@ -97,9 +104,11 @@ export function initDoorControls(menuStage) {
 	update();
 
 	return {
+		// Indique si une porte est fermée.
 		isDoorClosed(side) {
 			return side === "left" ? state.left : state.right;
 		},
+		// Nettoie le DOM en supprimant les boutons et panneaux.
 		destroy() {
 			leftButton.remove();
 			rightButton.remove();
